@@ -72,7 +72,9 @@ class ReleaseManager:
     def update_version(self, new_version: str) -> None:
         """Update version in pyproject.toml."""
         content = self.pyproject_path.read_text()
-        updated_content = re.sub(r'(version\s*=\s*["\'])[^"\']+(["\'])', rf"\g<1>{new_version}\g<2>", content)
+        updated_content = re.sub(
+            r'(version\s*=\s*["\'])[^"\']+(["\'])', rf"\g<1>{new_version}\g<2>", content
+        )
         self.pyproject_path.write_text(updated_content)
         print(f"✅ Updated version to {new_version} in pyproject.toml")
 
@@ -89,7 +91,9 @@ class ReleaseManager:
         else:
             raise ReleaseError(f"Invalid version type: {version_type}")
 
-    def update_changelog(self, new_version: str, description: Optional[str] = None) -> None:
+    def update_changelog(
+        self, new_version: str, description: Optional[str] = None
+    ) -> None:
         """Update CHANGELOG.md with new version entry."""
         content = self.changelog_path.read_text()
 
@@ -100,7 +104,9 @@ class ReleaseManager:
         if description:
             version_content = f"{version_header}\n\n{description}\n\n"
         else:
-            version_content = f"{version_header}\n\n### Added\n- Release {new_version}\n\n"
+            version_content = (
+                f"{version_header}\n\n### Added\n- Release {new_version}\n\n"
+            )
 
         # Insert after the header and before [Unreleased]
         lines = content.split("\n")
@@ -144,7 +150,9 @@ class ReleaseManager:
         ).stdout.strip()
 
         if status:
-            raise ReleaseError("Working directory has uncommitted changes. Please commit or stash them first.")
+            raise ReleaseError(
+                "Working directory has uncommitted changes. Please commit or stash them first."
+            )
 
         # Check if remote is up to date
         subprocess.run(["git", "fetch", "origin"], check=True, cwd=self.project_root)
@@ -164,12 +172,16 @@ class ReleaseManager:
         ).stdout.strip()
 
         if local_commit != remote_commit:
-            raise ReleaseError(f"Local {current_branch} branch is not up to date with remote. Please pull latest changes.")
+            raise ReleaseError(
+                f"Local {current_branch} branch is not up to date with remote. Please pull latest changes."
+            )
 
         # Warn about branch protection if not on main
         if current_branch != "main":
             print(f"⚠️  Warning: You're on {current_branch} branch, not main")
-            print("   This is fine for releases, but ensure you have proper permissions")
+            print(
+                "   This is fine for releases, but ensure you have proper permissions"
+            )
             print("   Consider using a release branch workflow for better security")
         else:
             print("✅ Releasing from main branch")
@@ -181,7 +193,9 @@ class ReleaseManager:
             subprocess.run(["make", "test"], check=True, cwd=self.project_root)
             print("✅ All tests passed")
         except subprocess.CalledProcessError:
-            raise ReleaseError("Tests failed. Please fix all test failures before releasing.")
+            raise ReleaseError(
+                "Tests failed. Please fix all test failures before releasing."
+            )
 
     def run_linting(self) -> None:
         """Run linting checks to ensure code quality."""
@@ -190,7 +204,9 @@ class ReleaseManager:
             subprocess.run(["make", "lint"], check=True, cwd=self.project_root)
             print("✅ All linting checks passed")
         except subprocess.CalledProcessError:
-            raise ReleaseError("Linting failed. Please fix all linting issues before releasing.")
+            raise ReleaseError(
+                "Linting failed. Please fix all linting issues before releasing."
+            )
 
     def commit_release(self, new_version: str) -> None:
         """Commit release changes."""
@@ -202,7 +218,9 @@ class ReleaseManager:
             cwd=self.project_root,
         )
 
-        subprocess.run(["git", "commit", "-m", commit_message], check=True, cwd=self.project_root)
+        subprocess.run(
+            ["git", "commit", "-m", commit_message], check=True, cwd=self.project_root
+        )
         print(f"✅ Committed release changes for v{new_version}")
 
     def create_tag(self, new_version: str) -> None:
@@ -214,7 +232,9 @@ class ReleaseManager:
         print(f"✅ Created tag {tag_name}")
 
         # Push tag
-        subprocess.run(["git", "push", "origin", tag_name], check=True, cwd=self.project_root)
+        subprocess.run(
+            ["git", "push", "origin", tag_name], check=True, cwd=self.project_root
+        )
         print(f"✅ Pushed tag {tag_name} to remote")
 
     def push_changes(self) -> None:
@@ -225,8 +245,10 @@ class ReleaseManager:
             text=True,
             cwd=self.project_root,
         ).stdout.strip()
-        
-        subprocess.run(["git", "push", "origin", current_branch], check=True, cwd=self.project_root)
+
+        subprocess.run(
+            ["git", "push", "origin", current_branch], check=True, cwd=self.project_root
+        )
         print(f"✅ Pushed release changes to remote {current_branch} branch")
 
     def create_pull_request_workflow(self, new_version: str) -> None:
@@ -237,15 +259,17 @@ class ReleaseManager:
             text=True,
             cwd=self.project_root,
         ).stdout.strip()
-        
+
         if current_branch == "main":
             return  # No need for PR workflow on main
-        
+
         print(f"\n📋 Pull Request Workflow for {current_branch} → main:")
         print(f"   1. ✅ Changes committed and pushed to {current_branch}")
         print(f"   2. ✅ Tag v{new_version} created and pushed")
         print(f"   3. 🔄 Next steps:")
-        print(f"      - Go to: https://github.com/yanairon/taskpods/pull/new/{current_branch}")
+        print(
+            f"      - Go to: https://github.com/yanairon/taskpods/pull/new/{current_branch}"
+        )
         print(f"      - Create PR: {current_branch} → main")
         print(f"      - Title: 'Release v{new_version}'")
         print(f"      - Description: Include changelog changes")
@@ -258,7 +282,9 @@ class ReleaseManager:
         # Check if version was updated
         current_version = self.get_current_version()
         if current_version != new_version:
-            raise ReleaseError(f"Version mismatch: expected {new_version}, got {current_version}")
+            raise ReleaseError(
+                f"Version mismatch: expected {new_version}, got {current_version}"
+            )
 
         # Check if changelog was updated
         changelog_content = self.changelog_path.read_text()
@@ -291,14 +317,14 @@ class ReleaseManager:
             # Validate changes
             self.validate_release(new_version)
 
-                        # Git operations
+            # Git operations
             self.commit_release(new_version)
             self.push_changes()
             self.create_tag(new_version)
-            
+
             print("=" * 50)
             print(f"🎉 Successfully released v{new_version}!")
-            
+
             # Handle different branch scenarios
             current_branch = subprocess.run(
                 ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -306,7 +332,7 @@ class ReleaseManager:
                 text=True,
                 cwd=self.project_root,
             ).stdout.strip()
-            
+
             if current_branch == "main":
                 print("📦 Package will be automatically built and published to PyPI")
                 print("🏷️  GitHub release will be created automatically")
@@ -350,7 +376,7 @@ def main():
         action="store_true",
         help="Show what would be done without making changes",
     )
-    
+
     parser.add_argument(
         "--allow-protected-branch",
         action="store_true",
