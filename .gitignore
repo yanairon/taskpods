@@ -202,3 +202,6 @@ temp/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Security scan reports
+bandit-report.json
