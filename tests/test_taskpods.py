@@ -177,18 +177,24 @@ class TestTaskpodsGitOperationsInProgress:
                 pass  # Expected
 
 
-def test_branch_exists_true_for_main():
+@patch("taskpods.subprocess.run")
+def test_branch_exists_true_for_main(mock_run):
     """main branch should exist in the repository"""
+    mock_run.return_value.returncode = 0
     assert branch_exists("main") is True
 
 
-def test_branch_exists_false_for_nonexistent():
+@patch("taskpods.subprocess.run")
+def test_branch_exists_false_for_nonexistent(mock_run):
     """Nonexistent branch should return False without printing fatal error"""
+    mock_run.return_value.returncode = 1
     assert branch_exists("this-branch-does-not-exist") is False
 
 
-def test_remote_branch_exists_false_for_nonexistent():
+@patch("taskpods.subprocess.run")
+def test_remote_branch_exists_false_for_nonexistent(mock_run):
     """remote branch existence check should return False for a nonexistent branch"""
+    mock_run.return_value.returncode = 1
     assert remote_branch_exists("this-branch-does-not-exist") is False
 
 
