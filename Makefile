@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov test-fast lint format check clean build publish docs security
+.PHONY: help install install-dev test test-cov test-fast lint format check clean build publish release release-patch release-minor release-major release-custom docs security pre-commit pre-commit-run
 
 help:  ## Show this help message
 	@echo 'Usage: make [target]'
@@ -47,6 +47,28 @@ build:  ## Build the package
 
 publish:  ## Publish to PyPI (requires PYPI_API_TOKEN)
 	twine upload dist/*
+
+release: ## Interactive release with version management
+	@echo "🚀 Starting interactive release process..."
+	@echo "Available options:"
+	@echo "  make release-patch    # Release patch version (0.1.0 -> 0.1.1)"
+	@echo "  make release-minor    # Release minor version (0.1.0 -> 0.2.0)"
+	@echo "  make release-major    # Release major version (0.1.0 -> 1.0.0)"
+	@echo "  make release-custom   # Release with custom version"
+
+release-patch: ## Release patch version
+	python scripts/release.py --type patch
+
+release-minor: ## Release minor version
+	python scripts/release.py --type minor
+
+release-major: ## Release major version
+	python scripts/release.py --type major
+
+release-custom: ## Release with custom version
+	@read -p "Enter version (e.g., 0.2.0): " version; \
+	read -p "Enter description (optional): " description; \
+	python scripts/release.py --version $$version --description "$$description"
 
 # docs:  ## Build documentation (requires sphinx - removed for Python 3.9 compatibility)
 # 	sphinx-build -b html docs/ docs/_build/html

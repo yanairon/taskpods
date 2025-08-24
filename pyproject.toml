@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "taskpods"
-version = "0.2.0"
+version = "0.3.0"
 description = "Parallel AI task pods via git worktrees"
 readme = "README.md"
 license = "MIT"
@@ -49,6 +49,7 @@ dev = [
     "flake8>=6.0.0",
     "flake8-docstrings>=0.2.3",
     "mypy>=1.0.0",
+    "packaging>=21.0.0",
     "pre-commit>=3.0.0",
     "coverage>=7.0.0",
     "bandit>=1.7.0",
@@ -97,7 +98,7 @@ markers = [
 ]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
