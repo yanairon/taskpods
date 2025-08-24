@@ -1,5 +1,12 @@
 # taskpods: Parallel AI Task Pods via Git Worktrees
 
+[![CI](https://github.com/yanairon/taskpods/workflows/CI/badge.svg)](https://github.com/yanairon/taskpods/actions)
+[![Codecov](https://codecov.io/gh/yanairon/taskpods/branch/main/graph/badge.svg)](https://codecov.io/gh/yanairon/taskpods)
+[![PyPI](https://img.shields.io/pypi/v/taskpods.svg)](https://pypi.org/project/taskpods/)
+[![Python](https://img.shields.io/pypi/pyversions/taskpods.svg)](https://pypi.org/project/taskpods/)
+[![License](https://img.shields.io/github/license/yanairon/taskpods.svg)](https://github.com/yanairon/taskpods/blob/main/LICENSE)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 `taskpods` is a tiny command‑line tool that lets you spawn disposable "AI pods" in your Git repository.  Each pod is its own worktree and branch, so you can run Copilot, Cursor, or Claude Code on isolated tasks without polluting your main branch.  When you're done, you can commit and push the work to a pull request or nuke the pod entirely.
 
 ## Features

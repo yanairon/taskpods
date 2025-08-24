@@ -170,3 +170,38 @@ cython_debug/
 
 # taskpods specific
 .taskpods/
+
+# Production and deployment
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Security and secrets
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Security scan reports
+bandit-report.json

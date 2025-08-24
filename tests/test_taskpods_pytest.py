@@ -1,21 +1,23 @@
-"""
-Pytest-compatible tests for taskpods.
-
-Run with: pytest tests/test_taskpods_pytest.py
-"""
+"""Test suite for taskpods module using pytest style."""
 
 import os
 import subprocess
 import sys
 from unittest.mock import patch
 
-# Add repository root to sys.path to ensure taskpods.py can be imported when running tests
-sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+# Add repository root to sys.path to ensure taskpods.py can be imported
+repo_root = os.path.dirname(os.path.dirname(__file__))
+sys.path.insert(0, os.path.abspath(repo_root))
 
 # Import after path modification
-from taskpods import (branch_exists, check_git_operations_in_progress,
-                      check_remote_origin, has_uncommitted_changes,
-                      remote_branch_exists, validate_pod_name)
+from taskpods import branch_exists  # noqa: E402
+from taskpods import (
+    check_git_operations_in_progress,
+    check_remote_origin,
+    has_uncommitted_changes,
+    remote_branch_exists,
+    validate_pod_name,
+)
 
 
 class TestTaskpodsValidation:
@@ -186,20 +188,20 @@ class TestTaskpodsGitOperationsInProgress:
 # Standalone tests that can run without mocking
 @patch("taskpods.subprocess.run")
 def test_branch_exists_true_for_main(mock_run):
-    """main branch should exist in the repository"""
+    """Test that main branch exists in the repository."""
     mock_run.return_value.returncode = 0
     assert branch_exists("main") is True
 
 
 @patch("taskpods.subprocess.run")
 def test_branch_exists_false_for_nonexistent(mock_run):
-    """Nonexistent branch should return False without printing fatal error"""
+    """Test that nonexistent branch returns False without printing fatal error."""
     mock_run.return_value.returncode = 1
     assert branch_exists("this-branch-does-not-exist") is False
 
 
 @patch("taskpods.subprocess.run")
 def test_remote_branch_exists_false_for_nonexistent(mock_run):
-    """remote branch existence check should return False for a nonexistent branch"""
+    """Test that remote branch existence check returns False for nonexistent branch."""
     mock_run.return_value.returncode = 1
     assert remote_branch_exists("this-branch-does-not-exist") is False
