@@ -164,7 +164,9 @@ class ReleaseManager:
         ).stdout.strip()
 
         if local_commit != remote_commit:
-            raise ReleaseError(f"Local {current_branch} branch is not up to date with remote. Please pull latest changes.")
+            raise ReleaseError(
+                f"Local {current_branch} branch is not up to date with remote. Please pull latest changes."
+            )
 
         # Warn about branch protection if not on main
         if current_branch != "main":
@@ -225,7 +227,7 @@ class ReleaseManager:
             text=True,
             cwd=self.project_root,
         ).stdout.strip()
-        
+
         subprocess.run(["git", "push", "origin", current_branch], check=True, cwd=self.project_root)
         print(f"✅ Pushed release changes to remote {current_branch} branch")
 
@@ -237,10 +239,10 @@ class ReleaseManager:
             text=True,
             cwd=self.project_root,
         ).stdout.strip()
-        
+
         if current_branch == "main":
             return  # No need for PR workflow on main
-        
+
         print(f"\n📋 Pull Request Workflow for {current_branch} → main:")
         print(f"   1. ✅ Changes committed and pushed to {current_branch}")
         print(f"   2. ✅ Tag v{new_version} created and pushed")
@@ -291,14 +293,14 @@ class ReleaseManager:
             # Validate changes
             self.validate_release(new_version)
 
-                        # Git operations
+            # Git operations
             self.commit_release(new_version)
             self.push_changes()
             self.create_tag(new_version)
-            
+
             print("=" * 50)
             print(f"🎉 Successfully released v{new_version}!")
-            
+
             # Handle different branch scenarios
             current_branch = subprocess.run(
                 ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -306,7 +308,7 @@ class ReleaseManager:
                 text=True,
                 cwd=self.project_root,
             ).stdout.strip()
-            
+
             if current_branch == "main":
                 print("📦 Package will be automatically built and published to PyPI")
                 print("🏷️  GitHub release will be created automatically")
@@ -350,7 +352,7 @@ def main():
         action="store_true",
         help="Show what would be done without making changes",
     )
-    
+
     parser.add_argument(
         "--allow-protected-branch",
         action="store_true",
