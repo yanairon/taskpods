@@ -17,8 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release 0.3.0
 
 
-## [Unreleased]
-
 ### Added
 
 - Production-grade GitHub repository configuration
@@ -59,6 +57,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Input sanitization for pod names
 - Path validation to prevent directory traversal
 - Git repository isolation improvements
+
+## [Unreleased]
+
+### Added
+
+- Future features and improvements
 
 ## [0.1.0] - 2024-01-XX
 
