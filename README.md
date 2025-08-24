@@ -1,6 +1,6 @@
 # taskpods: Parallel AI Task Pods via Git Worktrees
 
-`taskpods` is a tiny command‑line tool that lets you spawn disposable “AI pods” in your Git repository.  Each pod is its own worktree and branch, so you can run Copilot, Cursor, or Claude Code on isolated tasks without polluting your main branch.  When you’re done, you can commit and push the work to a pull request or nuke the pod entirely.
+`taskpods` is a tiny command‑line tool that lets you spawn disposable "AI pods" in your Git repository.  Each pod is its own worktree and branch, so you can run Copilot, Cursor, or Claude Code on isolated tasks without polluting your main branch.  When you're done, you can commit and push the work to a pull request or nuke the pod entirely.
 
 ## Features
 
@@ -12,18 +12,33 @@
 
 ## Installation
 
-This repository contains a single script, `taskpods.py`, which can be run directly with Python 3.  To install it globally, copy it somewhere on your `PATH` and make it executable:
+### Quick Install (Recommended)
+
+Install directly from the repository:
 
 ```bash
-cp taskpods.py ~/.local/bin/taskpods
-chmod +x ~/.local/bin/taskpods
+pip install git+https://github.com/yanairon/taskpods.git
 ```
 
-Alternatively, you can run it in place:
+### Alternative Installation Methods
 
+**From PyPI** (when available):
 ```bash
-python3 taskpods.py start myfeature
+pip install taskpods
 ```
+
+**Manual installation**:
+```bash
+# Download and install manually
+curl -O https://raw.githubusercontent.com/yanairon/taskpods/main/taskpods.py
+chmod +x taskpods.py
+sudo mv taskpods.py /usr/local/bin/taskpods
+```
+
+**Requirements**:
+- Python 3.9+
+- Git 2.5+ with worktree support
+- A Git repository with a remote named `origin`
 
 ## Usage
 
@@ -38,7 +53,7 @@ This will:
 1. Fetch the latest changes from `main` and fast‑forward your local `main`.
 2. Create a new branch `pods/fix‑typos` from `main`.
 3. Add a Git worktree at `.taskpods/fix‑typos`.
-4. Drop you into a new editor window (Cursor if available, otherwise VS Code) with the worktree opened.
+4. Drop you into a new editor window (Cursor if available, otherwise VS Code) with the worktree opened.
 
 ### Finish a pod and create a pull request
 
@@ -54,7 +69,7 @@ This will stage and commit all changes in the worktree with the given message, p
 taskpods abort fix‑typos
 ```
 
-If the branch hasn’t been pushed to `origin`, this will delete the worktree and local branch.  It refuses to abort pods whose branches are already on `origin` to avoid data loss.
+If the branch hasn't been pushed to `origin`, this will delete the worktree and local branch.  It refuses to abort pods whose branches are already on `origin` to avoid data loss.
 
 ### List active pods
 
@@ -74,9 +89,9 @@ Finds pods whose remote branches are fully merged into their base branch and rem
 
 ## Requirements
 
-- **Python 3.7+** – This script uses only the standard library.
-- **Git** – You need Git installed with worktree support (Git 2.5+).  The repository must already be initialised with a remote named `origin`.
-- **Editor (optional)** – The script will try to open your editor.  It prefers `cursor` (Cursor’s CLI), then `code` (VS Code).  If neither is found, it won’t open anything.
+- **Python 3.9+** – This script uses only the standard library.
+- **Git** – You need Git installed with worktree support (Git 2.5+).  The repository must already be initialised with a remote named `origin`.
+- **Editor (optional)** – The script will try to open your editor.  It prefers `cursor` (Cursor's CLI), then `code` (VS Code).  If neither is found, it won't open anything.
 - **`gh` CLI (optional)** – If installed, `taskpods done` will automatically open a GitHub pull request.  Otherwise, it simply pushes the branch and prints a success message.
 
 ## Support
@@ -87,7 +102,21 @@ Finds pods whose remote branches are fully merged into their base branch and rem
 
 This project is released under the MIT License.  See the [LICENSE](LICENSE) file for details.
 
+---
+
+### Why worktrees?
+
+Git worktrees let you have multiple branches checked out in separate directories without duplicating your entire `.git` object store.  They're faster than clones, don't waste disk space, and make cleanup trivial.  `taskpods` wraps a handful of `git worktree` commands with sensible defaults and adds quality‑of‑life features like automatic PR creation and safe aborts.
+
+### DISCLAIMER
+
+This tool is provided "as is" with no warranty.  It writes to your Git repository and could potentially cause data loss if used incorrectly.  Read the code, use it at your own risk, and always back up anything important before experimenting.
+
+---
+
 ## Development
+
+*For contributors and developers:*
 
 ### Setting up the development environment
 
@@ -125,13 +154,3 @@ Run `make format` to format code and `make lint` to check for issues.
 ## Contributing
 
 Contributions, bug reports, and feature requests are welcome!  Feel free to open an issue or submit a pull request.
-
----
-
-### Why worktrees?
-
-Git worktrees let you have multiple branches checked out in separate directories without duplicating your entire `.git` object store.  They’re faster than clones, don’t waste disk space, and make cleanup trivial.  `taskpods` wraps a handful of `git worktree` commands with sensible defaults and adds quality‑of‑life features like automatic PR creation and safe aborts.
-
-### DISCLAIMER
-
-This tool is provided “as is” with no warranty.  It writes to your Git repository and could potentially cause data loss if used incorrectly.  Read the code, use it at your own risk, and always back up anything important before experimenting.
