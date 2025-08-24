@@ -153,7 +153,8 @@ def check_git_operations_in_progress() -> None:
 
     if os.path.exists(cherry_pick):
         print(
-            "[x] Error: A cherry-pick is in progress. Please complete or abort it first."
+            "[x] Error: A cherry-pick is in progress. Please complete or abort it "
+            "first."
         )
         sys.exit(1)
 
@@ -183,7 +184,8 @@ def validate_worktree_link(worktree_path: str) -> None:
 
             if not os.path.samefile(main_git_dir, os.path.join(repo_root, ".git")):
                 print(
-                    f"[x] Error: {worktree_path} is not linked to the expected repository"
+                    f"[x] Error: {worktree_path} is not linked to the expected "
+                    "repository"
                 )
                 sys.exit(1)
     except IOError as e:
@@ -279,7 +281,8 @@ def open_editor(path: str) -> None:
     else:
         print(f"[!] No editor found. Pod created at: {path}")
         print(
-            "    Configure editor in ~/.taskpodsrc or set TASKPODS_EDITOR environment variable"
+            "    Configure editor in ~/.taskpodsrc or set TASKPODS_EDITOR "
+            "environment variable"
         )
         print("    Supported editors: cursor, code, vim, nvim, emacs, subl, atom")
 
@@ -334,14 +337,16 @@ def start(args: argparse.Namespace) -> None:
         # Check if it's actually a Git worktree
         if os.path.exists(os.path.join(worktree_path, ".git")):
             print(
-                f"[x] Error: Pod path already exists and contains a Git repository: {worktree_path}"
+                f"[x] Error: Pod path already exists and contains a Git repository: "
+                f"{worktree_path}"
             )
             print("    This might be an existing pod or a manually created directory")
             print("    Use 'taskpods list' to see existing pods")
             sys.exit(1)
         else:
             print(
-                f"[x] Error: Pod path exists but is not a Git worktree: {worktree_path}"
+                f"[x] Error: Pod path exists but is not a Git worktree: "
+                f"{worktree_path}"
             )
             print(
                 "    Please remove this directory manually or choose a different name"
@@ -467,7 +472,8 @@ def done(args: argparse.Namespace) -> None:
     expected_branch = f"pods/{name}"
     if branch != expected_branch:
         print(
-            f"[!] Warning: Worktree is on branch '{branch}', expected '{expected_branch}'"
+            f"[!] Warning: Worktree is on branch '{branch}', expected "
+            f"'{expected_branch}'"
         )
         print("    This might indicate the worktree was modified manually")
         response = input("    Continue anyway? (y/N): ")
@@ -580,7 +586,8 @@ def abort(args: argparse.Namespace) -> None:
     expected_branch = f"pods/{name}"
     if branch != expected_branch:
         print(
-            f"[!] Warning: Worktree is on branch '{branch}', expected '{expected_branch}'"
+            f"[!] Warning: Worktree is on branch '{branch}', expected "
+            f"'{expected_branch}'"
         )
         print("    This might indicate the worktree was modified manually")
         response = input("    Continue anyway? (y/N): ")
