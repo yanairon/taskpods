@@ -2,6 +2,11 @@ codecov:
   require_ci_to_pass: true
   notify:
     wait_for_ci: true
+  # Enable Test Analytics
+  test_analytics: true
+  # Specify test results file for Test Analytics
+  test_results:
+    - test-results.xml
 
 coverage:
   precision: 2
