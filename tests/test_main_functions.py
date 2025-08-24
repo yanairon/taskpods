@@ -288,8 +288,6 @@ class TestStartFunction:
             )
 
 
-
-
 class TestListPodsFunction:
     """Test the list_pods function."""
 

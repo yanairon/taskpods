@@ -71,7 +71,9 @@ class TestDoneFunction:
     @patch("taskpods.os.path.isdir")
     @patch("taskpods.os.path.exists")
     @patch("taskpods.sout")
-    def test_done_invalid_worktree(self, mock_sout, mock_exists, mock_isdir, mock_get_pods_dir, mock_validate_name):
+    def test_done_invalid_worktree(
+        self, mock_sout, mock_exists, mock_isdir, mock_get_pods_dir, mock_validate_name
+    ):
         """Test done function fails when path is not a valid worktree."""
         mock_get_pods_dir.return_value = "/tmp/.taskpods"
         mock_isdir.return_value = True
@@ -82,9 +84,14 @@ class TestDoneFunction:
 
         with patch("sys.exit") as mock_exit:
             with patch("builtins.print") as mock_print:
-                with patch("builtins.input", return_value="n"):  # Mock input to prevent pytest error
+                with patch(
+                    "builtins.input", return_value="n"
+                ):  # Mock input to prevent pytest error
                     done(args)
-                    mock_print.assert_any_call("[x] Error: /tmp/.taskpods/test-pod is not a valid Git worktree")
+                    mock_print.assert_any_call(
+                        "[x] Error: /tmp/.taskpods/test-pod is not a valid "
+                        "Git worktree"
+                    )
                     # The function might call exit multiple times, just verify it was called
                     mock_exit.assert_called()
 
@@ -124,7 +131,8 @@ class TestDoneFunction:
                                 with patch("taskpods.subprocess.Popen"):
                                     done(args)
                                     mock_print.assert_any_call(
-                                        "[!] Warning: Worktree is on branch 'wrong-branch', expected 'pods/test-pod'"
+                                        "[!] Warning: Worktree is on branch "
+                                        "'wrong-branch', expected 'pods/test-pod'"
                                     )
 
     @patch("taskpods.validate_pod_name")
@@ -167,7 +175,9 @@ class TestDoneFunction:
                     with patch("taskpods.subprocess.Popen"):
                         with patch("builtins.input", return_value="n"):  # User cancels
                             done(args)
-                            mock_print.assert_any_call("[!] Warning: Nothing to commit or commit failed")
+                            mock_print.assert_any_call(
+                                "[!] Warning: Nothing to commit or commit failed"
+                            )
 
 
 class TestAbortFunction:
@@ -254,7 +264,9 @@ class TestAbortFunction:
                         with patch("taskpods.sh"):
                             with patch("taskpods.branch_exists", return_value=True):
                                 abort(args)
-                                mock_print.assert_any_call("[!] Warning: You have uncommitted changes in this pod")
+                                mock_print.assert_any_call(
+                                    "[!] Warning: You have uncommitted changes in this pod"
+                                )
 
     @patch("taskpods.validate_pod_name")
     @patch("taskpods.get_pods_dir")
@@ -323,7 +335,8 @@ class TestAbortFunction:
             with patch("builtins.print") as mock_print:
                 abort(args)
                 mock_print.assert_any_call(
-                    "[!] Branch pods/test-pod exists on origin.  Refusing to abort automatically."
+                    "[!] Branch pods/test-pod exists on origin.  "
+                    "Refusing to abort automatically."
                 )
                 # The function calls exit(2) for pushed branch, but there might be other exit calls
                 mock_exit.assert_called()
@@ -360,7 +373,9 @@ class TestPruneFunction:
 
         # Mock merged branches check - return stdout that contains the branch
         mock_merged_result = MagicMock()
-        mock_merged_result.stdout = "origin/refs/heads/pods/test-pod"  # Match the branch format
+        mock_merged_result.stdout = (
+            "origin/refs/heads/pods/test-pod"  # Match the branch format
+        )
         mock_subprocess_run.return_value = mock_merged_result
 
         with patch("builtins.open", mock_open(read_data='{"base": "main"}')):
@@ -384,7 +399,9 @@ class TestPruneFunction:
     @patch("taskpods.sout")
     @patch("taskpods.get_pods_dir")
     @patch("os.path.exists")
-    def test_prune_no_metadata_file(self, mock_exists, mock_get_pods_dir, mock_sout, mock_get_repo_root):
+    def test_prune_no_metadata_file(
+        self, mock_exists, mock_get_pods_dir, mock_sout, mock_get_repo_root
+    ):
         """Test prune function uses default base when no metadata file exists."""
         mock_get_repo_root.return_value = "/tmp/repo"
         mock_get_pods_dir.return_value = "/tmp/.taskpods"
