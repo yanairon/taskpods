@@ -10,8 +10,8 @@ repo_root = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, os.path.abspath(repo_root))
 
 # Import after path modification
+from taskpods import branch_exists  # noqa: E402
 from taskpods import (
-    branch_exists,  # noqa: E402
     check_git_operations_in_progress,
     check_remote_origin,
     has_uncommitted_changes,
@@ -114,7 +114,9 @@ class TestTaskpodsErrorHandling:
         mock_get_repo_root.return_value = "/tmp/repo"
 
         with patch("taskpods.subprocess.run") as mock_run:
-            mock_run.side_effect = subprocess.CalledProcessError(1, "git remote get-url origin")
+            mock_run.side_effect = subprocess.CalledProcessError(
+                1, "git remote get-url origin"
+            )
 
             try:
                 check_remote_origin()
