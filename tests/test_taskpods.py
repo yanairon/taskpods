@@ -114,9 +114,7 @@ class TestTaskpodsErrorHandling:
         mock_get_repo_root.return_value = "/tmp/repo"
 
         with patch("taskpods.subprocess.run") as mock_run:
-            mock_run.side_effect = subprocess.CalledProcessError(
-                1, "git remote get-url origin"
-            )
+            mock_run.side_effect = subprocess.CalledProcessError(1, "git remote get-url origin")
 
             try:
                 check_remote_origin()
