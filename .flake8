@@ -9,4 +9,6 @@ exclude =
     build,
     dist,
     .mypy_cache,
-    .pytest_cache
+    .pytest_cache,
+    .taskpods,
+    scripts

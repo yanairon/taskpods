@@ -92,7 +92,8 @@ class TestDoneFunction:
                         "[x] Error: /tmp/.taskpods/test-pod is not a valid "
                         "Git worktree"
                     )
-                    # The function might call exit multiple times, just verify it was called
+                    # The function might call exit multiple times, just verify it was
+                    # called
                     mock_exit.assert_called()
 
     @patch("taskpods.validate_pod_name")
@@ -265,7 +266,8 @@ class TestAbortFunction:
                             with patch("taskpods.branch_exists", return_value=True):
                                 abort(args)
                                 mock_print.assert_any_call(
-                                    "[!] Warning: You have uncommitted changes in this pod"
+                                    "[!] Warning: You have uncommitted changes in "
+                                    "this pod"
                                 )
 
     @patch("taskpods.validate_pod_name")
@@ -338,7 +340,8 @@ class TestAbortFunction:
                     "[!] Branch pods/test-pod exists on origin.  "
                     "Refusing to abort automatically."
                 )
-                # The function calls exit(2) for pushed branch, but there might be other exit calls
+                # The function calls exit(2) for pushed branch, but there might be
+                # other exit calls
                 mock_exit.assert_called()
 
 
