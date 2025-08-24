@@ -50,6 +50,7 @@ class ReleaseManager:
     """Manages the release process for taskpods."""
 
     def __init__(self, project_root: Path):
+        """Initialize the ReleaseManager with project root path."""
         self.project_root = project_root
         self.pyproject_path = project_root / "pyproject.toml"
         self.changelog_path = project_root / "CHANGELOG.md"
@@ -348,7 +349,7 @@ class ReleaseManager:
 
 
 def main():
-    """Main entry point for the release script."""
+    """Execute the main release script entry point."""
     parser = argparse.ArgumentParser(
         description="Production-grade release script for taskpods",
         formatter_class=argparse.RawDescriptionHelpFormatter,
