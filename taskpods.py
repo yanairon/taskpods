@@ -62,14 +62,18 @@ REPO_ROOT = None
 PODS_DIR = None
 
 
-def sh(cmd: List[str], cwd: Optional[str] = None, check: bool = True) -> subprocess.CompletedProcess:
+def sh(
+    cmd: List[str], cwd: Optional[str] = None, check: bool = True
+) -> subprocess.CompletedProcess:
     """Run a command and optionally check for errors."""
     return subprocess.run(cmd, cwd=cwd, check=check)
 
 
 def sout(cmd: List[str], cwd: Optional[str] = None) -> str:
     """Run a command and return stdout as a string."""
-    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=True).stdout.strip()
+    return subprocess.run(
+        cmd, cwd=cwd, capture_output=True, text=True, check=True
+    ).stdout.strip()
 
 
 def have(cmd_name: str) -> bool:
@@ -148,7 +152,10 @@ def check_git_operations_in_progress() -> None:
         sys.exit(1)
 
     if os.path.exists(cherry_pick):
-        print("[x] Error: A cherry-pick is in progress. Please complete or abort it " "first.")
+        print(
+            "[x] Error: A cherry-pick is in progress. Please complete or abort it "
+            "first."
+        )
         sys.exit(1)
 
 
@@ -176,7 +183,10 @@ def validate_worktree_link(worktree_path: str) -> None:
                 main_git_dir = os.path.join(worktree_path, main_git_dir)
 
             if not os.path.samefile(main_git_dir, os.path.join(repo_root, ".git")):
-                print(f"[x] Error: {worktree_path} is not linked to the expected " "repository")
+                print(
+                    f"[x] Error: {worktree_path} is not linked to the expected "
+                    "repository"
+                )
                 sys.exit(1)
     except IOError as e:
         print(f"[x] Error reading worktree link: {e}")
@@ -270,7 +280,10 @@ def open_editor(path: str) -> None:
             print(f"    Pod created at: {path}")
     else:
         print(f"[!] No editor found. Pod created at: {path}")
-        print("    Configure editor in ~/.taskpodsrc or set TASKPODS_EDITOR " "environment variable")
+        print(
+            "    Configure editor in ~/.taskpodsrc or set TASKPODS_EDITOR "
+            "environment variable"
+        )
         print("    Supported editors: cursor, code, vim, nvim, emacs, subl, atom")
 
 
@@ -323,13 +336,21 @@ def start(args: argparse.Namespace) -> None:
     if os.path.exists(worktree_path):
         # Check if it's actually a Git worktree
         if os.path.exists(os.path.join(worktree_path, ".git")):
-            print(f"[x] Error: Pod path already exists and contains a Git repository: " f"{worktree_path}")
+            print(
+                f"[x] Error: Pod path already exists and contains a Git repository: "
+                f"{worktree_path}"
+            )
             print("    This might be an existing pod or a manually created directory")
             print("    Use 'taskpods list' to see existing pods")
             sys.exit(1)
         else:
-            print(f"[x] Error: Pod path exists but is not a Git worktree: " f"{worktree_path}")
-            print("    Please remove this directory manually or choose a different name")
+            print(
+                f"[x] Error: Pod path exists but is not a Git worktree: "
+                f"{worktree_path}"
+            )
+            print(
+                "    Please remove this directory manually or choose a different name"
+            )
             sys.exit(1)
 
     # Fetch and update base branch
@@ -450,7 +471,10 @@ def done(args: argparse.Namespace) -> None:
     # Verify the worktree is on the expected branch
     expected_branch = f"pods/{name}"
     if branch != expected_branch:
-        print(f"[!] Warning: Worktree is on branch '{branch}', expected " f"'{expected_branch}'")
+        print(
+            f"[!] Warning: Worktree is on branch '{branch}', expected "
+            f"'{expected_branch}'"
+        )
         print("    This might indicate the worktree was modified manually")
         response = input("    Continue anyway? (y/N): ")
         if response.lower() != "y":
@@ -561,7 +585,10 @@ def abort(args: argparse.Namespace) -> None:
     # Verify the worktree is on the expected branch
     expected_branch = f"pods/{name}"
     if branch != expected_branch:
-        print(f"[!] Warning: Worktree is on branch '{branch}', expected " f"'{expected_branch}'")
+        print(
+            f"[!] Warning: Worktree is on branch '{branch}', expected "
+            f"'{expected_branch}'"
+        )
         print("    This might indicate the worktree was modified manually")
         response = input("    Continue anyway? (y/N): ")
         if response.lower() != "y":
@@ -582,7 +609,9 @@ def abort(args: argparse.Namespace) -> None:
 
     pushed = remote_branch_exists(branch)
     if pushed:
-        print(f"[!] Branch {branch} exists on origin.  Refusing to abort automatically.")
+        print(
+            f"[!] Branch {branch} exists on origin.  Refusing to abort automatically."
+        )
         print("    Consider `taskpods done` or remove manually after merging.")
         sys.exit(2)
     print(f"[*] Removing worktree {worktree_path} and deleting {branch}…")
@@ -678,8 +707,12 @@ def main() -> None:
 
     s = sub.add_parser("start", help="create a new pod")
     s.add_argument("name")
-    s.add_argument("--base", default="main", help="base branch to fork from (default: main)")
-    s.add_argument("--editor", help="specify editor to open (overrides config and environment)")
+    s.add_argument(
+        "--base", default="main", help="base branch to fork from (default: main)"
+    )
+    s.add_argument(
+        "--editor", help="specify editor to open (overrides config and environment)"
+    )
     s.set_defaults(func=start)
 
     s2 = sub.add_parser("done", help="commit, push, optionally remove pod")
