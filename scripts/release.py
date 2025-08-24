@@ -31,14 +31,12 @@ Examples:
 """
 
 import argparse
-import json
-import os
 import re
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 from packaging import version as pkg_version
 
 
@@ -74,7 +72,7 @@ class ReleaseManager:
     def update_version(self, new_version: str) -> None:
         """Update version in pyproject.toml."""
         content = self.pyproject_path.read_text()
-        updated_content = re.sub(r'(version\s*=\s*["\'])[^"\']+(["\'])', rf'\g<1>{new_version}\g<2>', content)
+        updated_content = re.sub(r'(version\s*=\s*["\'])[^"\']+(["\'])', rf"\g<1>{new_version}\g<2>", content)
         self.pyproject_path.write_text(updated_content)
         print(f"✅ Updated version to {new_version} in pyproject.toml")
 
@@ -105,18 +103,18 @@ class ReleaseManager:
             version_content = f"{version_header}\n\n### Added\n- Release {new_version}\n\n"
 
         # Insert after the header and before [Unreleased]
-        lines = content.split('\n')
+        lines = content.split("\n")
         insert_index = None
 
         for i, line in enumerate(lines):
-            if line.startswith('## [Unreleased]'):
+            if line.startswith("## [Unreleased]"):
                 insert_index = i
                 break
 
         if insert_index is None:
             # If no [Unreleased] section, insert after the header
             for i, line in enumerate(lines):
-                if line.startswith('## [') and i > 0:
+                if line.startswith("## [") and i > 0:
                     insert_index = i
                     break
 
@@ -124,14 +122,17 @@ class ReleaseManager:
             insert_index = 2  # Default to after header
 
         lines.insert(insert_index, version_content)
-        self.changelog_path.write_text('\n'.join(lines))
+        self.changelog_path.write_text("\n".join(lines))
         print(f"✅ Updated CHANGELOG.md with version {new_version}")
 
     def validate_git_status(self) -> None:
         """Validate Git repository status before release."""
         # Check if we're on main branch
         current_branch = subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True, cwd=self.project_root
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+            cwd=self.project_root,
         ).stdout.strip()
 
         if current_branch != "main":
@@ -139,7 +140,10 @@ class ReleaseManager:
 
         # Check for uncommitted changes
         status = subprocess.run(
-            ["git", "status", "--porcelain"], capture_output=True, text=True, cwd=self.project_root
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            cwd=self.project_root,
         ).stdout.strip()
 
         if status:
@@ -149,11 +153,17 @@ class ReleaseManager:
         subprocess.run(["git", "fetch", "origin"], check=True, cwd=self.project_root)
 
         local_commit = subprocess.run(
-            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=self.project_root
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            cwd=self.project_root,
         ).stdout.strip()
 
         remote_commit = subprocess.run(
-            ["git", "rev-parse", "origin/main"], capture_output=True, text=True, cwd=self.project_root
+            ["git", "rev-parse", "origin/main"],
+            capture_output=True,
+            text=True,
+            cwd=self.project_root,
         ).stdout.strip()
 
         if local_commit != remote_commit:
@@ -181,7 +191,11 @@ class ReleaseManager:
         """Commit release changes."""
         commit_message = f"chore: prepare for v{new_version} release"
 
-        subprocess.run(["git", "add", "pyproject.toml", "CHANGELOG.md"], check=True, cwd=self.project_root)
+        subprocess.run(
+            ["git", "add", "pyproject.toml", "CHANGELOG.md"],
+            check=True,
+            cwd=self.project_root,
+        )
 
         subprocess.run(["git", "commit", "-m", commit_message], check=True, cwd=self.project_root)
         print(f"✅ Committed release changes for v{new_version}")
@@ -219,7 +233,12 @@ class ReleaseManager:
 
         print("✅ Release validation passed")
 
-    def release(self, new_version: str, description: Optional[str] = None, skip_tests: bool = False) -> None:
+    def release(
+        self,
+        new_version: str,
+        description: Optional[str] = None,
+        skip_tests: bool = False,
+    ) -> None:
         """Execute the complete release process."""
         print(f"🚀 Starting release process for v{new_version}")
         print("=" * 50)
@@ -245,9 +264,9 @@ class ReleaseManager:
 
             print("=" * 50)
             print(f"🎉 Successfully released v{new_version}!")
-            print(f"📦 Package will be automatically built and published to PyPI")
-            print(f"🏷️  GitHub release will be created automatically")
-            print(f"🔗 Check GitHub Actions for build progress")
+            print("📦 Package will be automatically built and published to PyPI")
+            print("🏷️  GitHub release will be created automatically")
+            print("🔗 Check GitHub Actions for build progress")
 
         except Exception as e:
             print(f"❌ Release failed: {e}")
@@ -265,13 +284,25 @@ def main():
 
     parser.add_argument("--version", help="Specify exact version (e.g., 0.2.0)")
 
-    parser.add_argument("--type", choices=["major", "minor", "patch"], help="Auto-increment version type")
+    parser.add_argument(
+        "--type",
+        choices=["major", "minor", "patch"],
+        help="Auto-increment version type",
+    )
 
     parser.add_argument("--description", help="Release description for changelog")
 
-    parser.add_argument("--skip-tests", action="store_true", help="Skip running tests and linting (use with caution)")
+    parser.add_argument(
+        "--skip-tests",
+        action="store_true",
+        help="Skip running tests and linting (use with caution)",
+    )
 
-    parser.add_argument("--dry-run", action="store_true", help="Show what would be done without making changes")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be done without making changes",
+    )
 
     args = parser.parse_args()
 
@@ -302,14 +333,14 @@ def main():
     # Confirm release
     if not args.dry_run:
         response = input(f"\n🤔 Proceed with release v{new_version}? (y/N): ")
-        if response.lower() != 'y':
+        if response.lower() != "y":
             print("❌ Release cancelled")
             sys.exit(0)
 
     # Execute release
     if args.dry_run:
         print(f"🔍 DRY RUN: Would release v{new_version}")
-        print(f"🔍 Would update pyproject.toml and CHANGELOG.md")
+        print("🔍 Would update pyproject.toml and CHANGELOG.md")
         print(f"🔍 Would create and push tag v{new_version}")
     else:
         manager.release(new_version, args.description, args.skip_tests)
