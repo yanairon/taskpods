@@ -58,6 +58,7 @@ dev = [
     "twine>=4.0.0",
     "pytest-mock>=3.10.0",
     "pytest-asyncio>=0.21.0",
+    "pytest-junit>=1.0.0",
 ]
 
 [tool.setuptools]
@@ -91,6 +92,8 @@ addopts = [
     "--strict-config",
     "--verbose",
     "--tb=short",
+    "--junitxml=test-results.xml",
+    "--junit-prefix=taskpods",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
