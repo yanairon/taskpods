@@ -22,7 +22,7 @@ pip install git+https://github.com/yanairon/taskpods.git
 
 ### Alternative Installation Methods
 
-**From PyPI** (when available):
+**From PyPI** (recommended for stable releases):
 ```bash
 pip install taskpods
 ```
