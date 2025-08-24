@@ -1,51 +1,62 @@
-.PHONY: help install install-dev test test-cov lint format clean build publish
+.PHONY: help install install-dev test test-cov test-fast lint format check clean build publish docs security
 
-help: ## Show this help message
-	@echo "Available commands:"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+help:  ## Show this help message
+	@echo 'Usage: make [target]'
+	@echo ''
+	@echo 'Targets:'
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-install: ## Install taskpods in development mode
+install:  ## Install the package
 	pip install -e .
 
-install-dev: ## Install development dependencies
+install-dev:  ## Install development dependencies
 	pip install -e ".[dev]"
-	pre-commit install
 
-test: ## Run tests
-	pytest tests/ -v
+test:  ## Run all tests
+	pytest
 
-test-cov: ## Run tests with coverage
-	pytest tests/ --cov=taskpods --cov-report=html --cov-report=term
+test-cov:  ## Run tests with coverage
+	pytest --cov=taskpods --cov-report=html --cov-report=term-missing
 
-lint: ## Run linting checks
-	flake8 taskpods.py tests/ --max-line-length=88 --extend-ignore=E203,W503,E501,E402
+test-fast:  ## Run tests in parallel
+	pytest -n auto
+
+lint:  ## Run all linters
+	flake8 . --max-line-length=88 --extend-ignore=E203,W503,E501,E402,D103 --exclude=.taskpods,dist,build,__pycache__
 	mypy taskpods.py
+	black --check --diff .
 
-format: ## Format code with black and isort
-	black taskpods.py tests/
-	isort taskpods.py tests/
+format:  ## Format code with Black
+	black .
+	isort .
 
-clean: ## Clean build artifacts
+check: format lint test  ## Run all quality checks
+
+clean:  ## Clean up build artifacts
 	rm -rf build/
 	rm -rf dist/
 	rm -rf *.egg-info/
 	rm -rf htmlcov/
+	rm -rf .coverage
 	rm -rf .pytest_cache/
-	rm -rf .mypy_cache/
+	find . -type d -name __pycache__ -delete
 	find . -type f -name "*.pyc" -delete
-	find . -type d -name "__pycache__" -delete
 
-build: ## Build distribution packages
+build:  ## Build the package
 	python -m build
 
-publish: ## Publish to PyPI (requires twine)
+publish:  ## Publish to PyPI (requires PYPI_API_TOKEN)
 	twine upload dist/*
 
-check: ## Run all quality checks
-	$(MAKE) lint
-	$(MAKE) test
-	$(MAKE) format
+# docs:  ## Build documentation (requires sphinx - removed for Python 3.9 compatibility)
+# 	sphinx-build -b html docs/ docs/_build/html
 
-dev-setup: ## Set up development environment
-	$(MAKE) install-dev
-	$(MAKE) check
+security:  ## Run security checks
+	bandit -r . --exclude tests,.taskpods,dist,build,__pycache__ --skip B101,B108,B404,B603,B607,B110
+	safety check
+
+pre-commit:  ## Install pre-commit hooks
+	pre-commit install
+
+pre-commit-run:  ## Run pre-commit on all files
+	pre-commit run --all-files
