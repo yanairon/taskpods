@@ -7,9 +7,14 @@ from unittest.mock import patch
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 # Import after path modification
-from taskpods import (branch_exists, check_git_operations_in_progress,
-                      check_remote_origin, has_uncommitted_changes,
-                      remote_branch_exists, validate_pod_name)
+from taskpods import (
+    branch_exists,
+    check_git_operations_in_progress,
+    check_remote_origin,
+    has_uncommitted_changes,
+    remote_branch_exists,
+    validate_pod_name,
+)
 
 
 class TestTaskpodsValidation:
