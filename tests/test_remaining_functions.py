@@ -70,7 +70,8 @@ class TestValidateWorktreeLink:
             with patch("builtins.print") as mock_print:
                 validate_worktree_link("/tmp/.taskpods/test-pod")
                 mock_print.assert_any_call(
-                    "[x] Error: /tmp/.taskpods/test-pod is not linked to the expected repository"
+                    "[x] Error: /tmp/.taskpods/test-pod is not linked to the "
+                    "expected repository"
                 )
                 mock_exit.assert_called_once_with(1)
 
@@ -90,12 +91,14 @@ class TestValidateWorktreeLink:
                 with patch(
                     "builtins.open",
                     side_effect=IOError(
-                        "[Errno 2] No such file or directory: '/tmp/.taskpods/test-pod/.git'"
+                        "[Errno 2] No such file or directory: "
+                        "'/tmp/.taskpods/test-pod/.git'"
                     ),
                 ):
                     validate_worktree_link("/tmp/.taskpods/test-pod")
                     mock_print.assert_any_call(
-                        "[x] Error reading worktree link: [Errno 2] No such file or directory: '/tmp/.taskpods/test-pod/.git'"
+                        "[x] Error reading worktree link: [Errno 2] No such file or "
+                        "directory: '/tmp/.taskpods/test-pod/.git'"
                     )
                     mock_exit.assert_called_once_with(1)
 
@@ -166,7 +169,8 @@ class TestCheckGitOperationsInProgress:
             with patch("builtins.print") as mock_print:
                 check_git_operations_in_progress()
                 mock_print.assert_called_once_with(
-                    "[x] Error: A merge is in progress. Please complete or abort it first."
+                    "[x] Error: A merge is in progress. Please complete or "
+                    "abort it first."
                 )
                 mock_exit.assert_called_once_with(1)
 
@@ -187,7 +191,8 @@ class TestCheckGitOperationsInProgress:
             with patch("builtins.print") as mock_print:
                 check_git_operations_in_progress()
                 mock_print.assert_called_once_with(
-                    "[x] Error: A rebase is in progress. Please complete or abort it first."
+                    "[x] Error: A rebase is in progress. Please complete or "
+                    "abort it first."
                 )
                 mock_exit.assert_called_once_with(1)
 
@@ -208,7 +213,8 @@ class TestCheckGitOperationsInProgress:
             with patch("builtins.print") as mock_print:
                 check_git_operations_in_progress()
                 mock_print.assert_called_once_with(
-                    "[x] Error: A cherry-pick is in progress. Please complete or abort it first."
+                    "[x] Error: A cherry-pick is in progress. Please complete or "
+                    "abort it first."
                 )
                 mock_exit.assert_called_once_with(1)
 

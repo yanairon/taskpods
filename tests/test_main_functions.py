@@ -298,7 +298,10 @@ class TestListPodsFunction:
         """Test list_pods lists pods successfully."""
         mock_get_pods_dir.return_value = "/tmp/.taskpods"
         mock_get_repo_root.return_value = "/tmp/repo"
-        mock_sout.return_value = "worktree /tmp/.taskpods/test-pod\nbranch refs/heads/pods/test-pod\n\nworktree /tmp/.taskpods/another-pod\nbranch refs/heads/pods/another-pod"
+        mock_sout.return_value = (
+            "worktree /tmp/.taskpods/test-pod\nbranch refs/heads/pods/test-pod\n\n"
+            "worktree /tmp/.taskpods/another-pod\nbranch refs/heads/pods/another-pod"
+        )
 
         args = MagicMock()
 
