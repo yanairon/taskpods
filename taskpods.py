@@ -69,7 +69,7 @@ def branch_exists(branch: str) -> bool:
         "rev-parse",
         "--verify",
         branch,
-    ], cwd=REPO_ROOT).returncode
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=REPO_ROOT).returncode
     return code == 0
 
 
@@ -82,7 +82,7 @@ def remote_branch_exists(branch: str) -> bool:
         "--heads",
         "origin",
         branch,
-    ], cwd=REPO_ROOT).returncode
+    ] stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,, cwd=REPO_ROOT).returncode
     return code == 0
 
 
