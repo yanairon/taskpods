@@ -14,17 +14,17 @@
 
 ### Quick Install (Recommended)
 
-Install directly from the repository:
+Install from PyPI:
 
 ```bash
-pip install git+https://github.com/yanairon/taskpods.git
+pip install taskpods
 ```
 
 ### Alternative Installation Methods
 
-**From PyPI** (recommended for stable releases):
+**From GitHub** (latest development version):
 ```bash
-pip install taskpods
+pip install git+https://github.com/yanairon/taskpods.git
 ```
 
 **Manual installation**:
