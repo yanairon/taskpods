@@ -1,3 +1,38 @@
+Metadata-Version: 2.4
+Name: taskpods
+Version: 0.1.0
+Summary: Parallel AI task pods via git worktrees
+Author-email: Yanai Ron <yanai.ron@gmail.com>
+Maintainer-email: Yanai Ron <yanai.ron@gmail.com>
+License-Expression: MIT
+Project-URL: Homepage, https://github.com/yanairon/taskpods
+Project-URL: Documentation, https://github.com/yanairon/taskpods#readme
+Project-URL: Repository, https://github.com/yanairon/taskpods.git
+Project-URL: Issues, https://github.com/yanairon/taskpods/issues
+Project-URL: Changelog, https://github.com/yanairon/taskpods/blob/main/CHANGELOG.md
+Keywords: git,worktree,ai,development,workflow,parallel
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Software Development :: Version Control :: Git
+Classifier: Topic :: Utilities
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: flake8>=6.0.0; extra == "dev"
+Requires-Dist: mypy>=1.0.0; extra == "dev"
+Dynamic: license-file
+
 # taskpods: Parallel AI Task Pods via Git Worktrees
 
 `taskpods` is a tiny command‑line tool that lets you spawn disposable "AI pods" in your Git repository.  Each pod is its own worktree and branch, so you can run Copilot, Cursor, or Claude Code on isolated tasks without polluting your main branch.  When you're done, you can commit and push the work to a pull request or nuke the pod entirely.

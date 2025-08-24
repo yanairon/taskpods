@@ -1,0 +1,22 @@
+# Development dependencies for taskpods
+# 
+# PREFERRED: Install with: pip install -e ".[dev]"
+# 
+# This file is provided as a convenience for:
+# - Manual installation: pip install -r requirements-dev.txt
+# - CI/CD systems that prefer requirements files
+# - Fallback if pyproject.toml installation fails
+#
+# The canonical source of truth is pyproject.toml
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Code quality
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# Development tools
+pre-commit>=3.0.0

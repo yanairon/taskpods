@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+taskpods.py
+taskpods.egg-info/PKG-INFO
+taskpods.egg-info/SOURCES.txt
+taskpods.egg-info/dependency_links.txt
+taskpods.egg-info/entry_points.txt
+taskpods.egg-info/requires.txt
+taskpods.egg-info/top_level.txt
+tests/test_taskpods.py
+tests/test_taskpods_pytest.py
