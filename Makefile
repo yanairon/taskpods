@@ -48,8 +48,8 @@ build:  ## Build the package
 publish:  ## Publish to PyPI (requires PYPI_API_TOKEN)
 	twine upload dist/*
 
-docs:  ## Build documentation
-	sphinx-build -b html docs/ docs/_build/html
+# docs:  ## Build documentation (requires sphinx - removed for Python 3.9 compatibility)
+# 	sphinx-build -b html docs/ docs/_build/html
 
 security:  ## Run security checks
 	bandit -r .
