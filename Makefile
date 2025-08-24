@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov lint format clean build publish
+.PHONY: help install install-dev test test-cov lint format clean build publish release
 
 help: ## Show this help message
 	@echo "Available commands:"
@@ -40,6 +40,28 @@ build: ## Build distribution packages
 
 publish: ## Publish to PyPI (requires twine)
 	twine upload dist/*
+
+release: ## Interactive release with version management
+	@echo "🚀 Starting interactive release process..."
+	@echo "Available options:"
+	@echo "  make release-patch    # Release patch version (0.1.0 -> 0.1.1)"
+	@echo "  make release-minor    # Release minor version (0.1.0 -> 0.2.0)"
+	@echo "  make release-major    # Release major version (0.1.0 -> 1.0.0)"
+	@echo "  make release-custom   # Release with custom version"
+
+release-patch: ## Release patch version
+	python scripts/release.py --type patch
+
+release-minor: ## Release minor version
+	python scripts/release.py --type minor
+
+release-major: ## Release major version
+	python scripts/release.py --type major
+
+release-custom: ## Release with custom version
+	@read -p "Enter version (e.g., 0.2.0): " version; \
+	read -p "Enter description (optional): " description; \
+	python scripts/release.py --version $$version --description "$$description"
 
 check: ## Run all quality checks
 	$(MAKE) lint
