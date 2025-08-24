@@ -20,7 +20,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -45,10 +44,20 @@ taskpods = "taskpods:main"
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "pytest-xdist>=3.0.0",
     "black>=23.0.0",
     "flake8>=6.0.0",
+    "flake8-docstrings>=0.2.3",
     "mypy>=1.0.0",
     "packaging>=21.0.0",
+    "pre-commit>=3.0.0",
+    "coverage>=7.0.0",
+    "bandit>=1.7.0",
+    "safety>=2.3.0",
+    "build>=1.0.0",
+    "twine>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "pytest-asyncio>=0.21.0",
 ]
 
 [tool.setuptools]
@@ -105,7 +114,7 @@ strict_equality = true
 
 [tool.flake8]
 max-line-length = 88
-extend-ignore = ["E203", "W503", "E501"]
+extend-ignore = ["E203", "W503", "E501", "E402", "D103"]
 exclude = [
     ".git",
     "__pycache__",
@@ -114,3 +123,29 @@ exclude = [
     ".venv",
     ".taskpods",
 ]
+
+[tool.coverage.run]
+source = ["taskpods"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "setup.py",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
