@@ -14,7 +14,6 @@ authors = [
 maintainers = [
     {name = "Yanai Ron", email = "yanai.ron@gmail.com"}
 ]
-long-description = "README.md"
 keywords = ["git", "worktree", "ai", "development", "workflow", "parallel"]
 classifiers = [
     "Development Status :: 4 - Beta",
