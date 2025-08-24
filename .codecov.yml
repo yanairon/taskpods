@@ -2,6 +2,8 @@ codecov:
   require_ci_to_pass: true
   notify:
     wait_for_ci: true
+  # Disable Test Analytics to resolve upload errors
+  test_analytics: false
 
 coverage:
   precision: 2
