@@ -10,10 +10,14 @@ repo_root = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, os.path.abspath(repo_root))
 
 # Import after path modification
-from taskpods import (branch_exists,  # noqa: E402
-                      check_git_operations_in_progress, check_remote_origin,
-                      has_uncommitted_changes, remote_branch_exists,
-                      validate_pod_name)
+from taskpods import (
+    branch_exists,  # noqa: E402
+    check_git_operations_in_progress,
+    check_remote_origin,
+    has_uncommitted_changes,
+    remote_branch_exists,
+    validate_pod_name,
+)
 
 
 class TestTaskpodsValidation:

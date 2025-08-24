@@ -302,8 +302,8 @@ def _get_preferred_editor() -> Optional[str]:
             with open(config_file) as f:
                 config = json.load(f)
                 editor = config.get("editor")
-                if editor:
-                    return editor
+                if editor and isinstance(editor, str):
+                    return editor  # type: ignore[no-any-return]
         except (json.JSONDecodeError, IOError):
             pass  # Silently ignore config file errors
 
@@ -313,8 +313,9 @@ def _get_preferred_editor() -> Optional[str]:
     terminal_editors = ["vim", "nvim", "emacs"]
 
     for editor in modern_editors + terminal_editors:
-        if shutil.which(editor):
-            return editor
+        editor_path = shutil.which(editor)
+        if editor_path:
+            return editor_path
 
     return None
 
