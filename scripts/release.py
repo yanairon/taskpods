@@ -127,16 +127,13 @@ class ReleaseManager:
 
     def validate_git_status(self) -> None:
         """Validate Git repository status before release."""
-        # Check if we're on main branch
+        # Check current branch
         current_branch = subprocess.run(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
             capture_output=True,
             text=True,
             cwd=self.project_root,
         ).stdout.strip()
-
-        if current_branch != "main":
-            raise ReleaseError(f"Must be on main branch, currently on {current_branch}")
 
         # Check for uncommitted changes
         status = subprocess.run(
@@ -160,14 +157,22 @@ class ReleaseManager:
         ).stdout.strip()
 
         remote_commit = subprocess.run(
-            ["git", "rev-parse", "origin/main"],
+            ["git", "rev-parse", f"origin/{current_branch}"],
             capture_output=True,
             text=True,
             cwd=self.project_root,
         ).stdout.strip()
 
         if local_commit != remote_commit:
-            raise ReleaseError("Local main branch is not up to date with remote. Please pull latest changes.")
+            raise ReleaseError(f"Local {current_branch} branch is not up to date with remote. Please pull latest changes.")
+
+        # Warn about branch protection if not on main
+        if current_branch != "main":
+            print(f"⚠️  Warning: You're on {current_branch} branch, not main")
+            print("   This is fine for releases, but ensure you have proper permissions")
+            print("   Consider using a release branch workflow for better security")
+        else:
+            print("✅ Releasing from main branch")
 
     def run_tests(self) -> None:
         """Run the test suite to ensure quality before release."""
@@ -214,8 +219,37 @@ class ReleaseManager:
 
     def push_changes(self) -> None:
         """Push release changes to remote."""
-        subprocess.run(["git", "push", "origin", "main"], check=True, cwd=self.project_root)
-        print("✅ Pushed release changes to remote")
+        current_branch = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+            cwd=self.project_root,
+        ).stdout.strip()
+        
+        subprocess.run(["git", "push", "origin", current_branch], check=True, cwd=self.project_root)
+        print(f"✅ Pushed release changes to remote {current_branch} branch")
+
+    def create_pull_request_workflow(self, new_version: str) -> None:
+        """Create a pull request workflow for protected branches."""
+        current_branch = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+            cwd=self.project_root,
+        ).stdout.strip()
+        
+        if current_branch == "main":
+            return  # No need for PR workflow on main
+        
+        print(f"\n📋 Pull Request Workflow for {current_branch} → main:")
+        print(f"   1. ✅ Changes committed and pushed to {current_branch}")
+        print(f"   2. ✅ Tag v{new_version} created and pushed")
+        print(f"   3. 🔄 Next steps:")
+        print(f"      - Go to: https://github.com/yanairon/taskpods/pull/new/{current_branch}")
+        print(f"      - Create PR: {current_branch} → main")
+        print(f"      - Title: 'Release v{new_version}'")
+        print(f"      - Description: Include changelog changes")
+        print(f"      - Merge PR to trigger release pipeline")
 
     def validate_release(self, new_version: str) -> None:
         """Validate the release configuration."""
@@ -257,16 +291,29 @@ class ReleaseManager:
             # Validate changes
             self.validate_release(new_version)
 
-            # Git operations
+                        # Git operations
             self.commit_release(new_version)
             self.push_changes()
             self.create_tag(new_version)
-
+            
             print("=" * 50)
             print(f"🎉 Successfully released v{new_version}!")
-            print("📦 Package will be automatically built and published to PyPI")
-            print("🏷️  GitHub release will be created automatically")
-            print("🔗 Check GitHub Actions for build progress")
+            
+            # Handle different branch scenarios
+            current_branch = subprocess.run(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                capture_output=True,
+                text=True,
+                cwd=self.project_root,
+            ).stdout.strip()
+            
+            if current_branch == "main":
+                print("📦 Package will be automatically built and published to PyPI")
+                print("🏷️  GitHub release will be created automatically")
+                print("🔗 Check GitHub Actions for build progress")
+            else:
+                # Protected branch workflow
+                self.create_pull_request_workflow(new_version)
 
         except Exception as e:
             print(f"❌ Release failed: {e}")
@@ -302,6 +349,12 @@ def main():
         "--dry-run",
         action="store_true",
         help="Show what would be done without making changes",
+    )
+    
+    parser.add_argument(
+        "--allow-protected-branch",
+        action="store_true",
+        help="Allow releases from protected branches (creates PR workflow)",
     )
 
     args = parser.parse_args()
