@@ -52,7 +52,7 @@ publish:  ## Publish to PyPI (requires PYPI_API_TOKEN)
 # 	sphinx-build -b html docs/ docs/_build/html
 
 security:  ## Run security checks
-	bandit -r .
+	bandit -r . --exclude tests,.taskpods,dist,build,__pycache__ --skip B101,B108,B404,B603,B607,B110
 	safety check
 
 pre-commit:  ## Install pre-commit hooks

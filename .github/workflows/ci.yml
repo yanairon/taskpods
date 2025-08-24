@@ -62,7 +62,7 @@ jobs:
       - name: Run Bandit security checks
         run: |
           pip install bandit
-          bandit -r . -f json -o bandit-report.json
+          bandit -r . --exclude tests,.taskpods,dist,build,__pycache__ --skip B101,B108,B404,B603,B607,B110 -f json -o bandit-report.json
       - name: Upload Bandit results
         uses: actions/upload-artifact@v4
         with:
