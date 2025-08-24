@@ -94,8 +94,42 @@ Finds pods whose remote branches are fully merged into their base branch and rem
 
 - **Python 3.9+** – This script uses only the standard library.
 - **Git** – You need Git installed with worktree support (Git 2.5+).  The repository must already be initialised with a remote named `origin`.
-- **Editor (optional)** – The script will try to open your editor.  It prefers `cursor` (Cursor's CLI), then `code` (VS Code).  If neither is found, it won't open anything.
+- **Editor (optional)** – The script will try to open your preferred editor. You can configure it via:
+  - Environment variable: `export TASKPODS_EDITOR="vim"`
+  - Configuration file: `~/.taskpodsrc`
+  - Command line: `taskpods start my-feature --editor vim`
+  - Auto-detection: Falls back to common editors if none configured
 - **`gh` CLI (optional)** – If installed, `taskpods done` will automatically open a GitHub pull request.  Otherwise, it simply pushes the branch and prints a success message.
+
+## Editor Configuration
+
+### Environment Variable
+```bash
+export TASKPODS_EDITOR="vim"
+export TASKPODS_EDITOR="code"
+export TASKPODS_EDITOR="cursor"
+```
+
+### Configuration File
+Create `~/.taskpodsrc`:
+```json
+{
+  "editor": "vim",
+  "default_base": "main"
+}
+```
+
+### Command Line
+```bash
+taskpods start my-feature --editor vim
+taskpods start my-feature --editor code
+taskpods start my-feature --editor cursor
+```
+
+### Supported Editors
+- **Modern**: Cursor, VS Code, Sublime Text, Atom
+- **Terminal**: Vim, Neovim, Emacs
+- **Custom**: Any editor available in your PATH
 
 ## Support
 

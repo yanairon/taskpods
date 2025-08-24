@@ -1,0 +1,9 @@
+# Taskpods Configuration File
+# Copy this file to ~/.taskpodsrc and customize as needed
+
+{
+  "editor": "vim",
+  "default_base": "main",
+  "auto_open_editor": true,
+  "preferred_editors": ["vim", "code", "cursor"]
+}

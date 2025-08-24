@@ -253,15 +253,65 @@ def remote_branch_exists(branch: str) -> bool:
 
 
 def open_editor(path: str) -> None:
-    """Open the given path in Cursor or VS Code if available."""
-    editor = shutil.which("cursor") or shutil.which("code")
-    if not editor:
-        return
-    # Try launching a new window; ignore failures.
-    try:
-        subprocess.Popen([editor, "--new-window", path])
-    except Exception:
-        pass
+    """Open the given path in user's preferred editor."""
+    editor = _get_preferred_editor()
+    
+    if editor:
+        try:
+            # Handle different editor types
+            if editor in ["cursor", "code"]:
+                # Modern editors with --new-window support
+                subprocess.Popen([editor, "--new-window", path])
+            elif editor in ["vim", "nvim", "emacs"]:
+                # Terminal editors
+                subprocess.Popen([editor, path])
+            elif editor in ["subl", "atom"]:
+                # Text editors
+                subprocess.Popen([editor, path])
+            else:
+                # Generic editor - try to open
+                subprocess.Popen([editor, path])
+            
+            print(f"[✓] Opened in {editor}")
+        except Exception as e:
+            print(f"[!] Warning: Could not open editor {editor}: {e}")
+            print(f"    Pod created at: {path}")
+    else:
+        print(f"[!] No editor found. Pod created at: {path}")
+        print("    Configure editor in ~/.taskpodsrc or set TASKPODS_EDITOR environment variable")
+        print("    Supported editors: cursor, code, vim, nvim, emacs, subl, atom")
+
+
+def _get_preferred_editor() -> Optional[str]:
+    """Get user's preferred editor with fallback priority."""
+    # 1. Command line argument (highest priority) - handled in start function
+    # 2. Environment variable
+    editor = os.environ.get('TASKPODS_EDITOR')
+    if editor:
+        return editor
+    
+    # 3. Configuration file
+    config_file = os.path.expanduser("~/.taskpodsrc")
+    if os.path.exists(config_file):
+        try:
+            with open(config_file) as f:
+                config = json.load(f)
+                editor = config.get('editor')
+                if editor:
+                    return editor
+        except (json.JSONDecodeError, IOError):
+            pass  # Silently ignore config file errors
+    
+    # 4. Intelligent defaults (lowest priority)
+    # Try modern editors first, then terminal editors
+    modern_editors = ["cursor", "code", "subl", "atom"]
+    terminal_editors = ["vim", "nvim", "emacs"]
+    
+    for editor in modern_editors + terminal_editors:
+        if shutil.which(editor):
+            return editor
+    
+    return None
 
 
 def start(args: argparse.Namespace) -> None:
@@ -341,7 +391,22 @@ def start(args: argparse.Namespace) -> None:
         # Continue anyway, this is not critical
 
     print(f"[✓] Pod ready: {worktree_path}  (branch: {branch})")
-    open_editor(worktree_path)
+    
+    # Handle editor selection with command line priority
+    if args.editor:
+        # User specified editor via command line
+        try:
+            if args.editor in ["cursor", "code"]:
+                subprocess.Popen([args.editor, "--new-window", worktree_path])
+            else:
+                subprocess.Popen([args.editor, worktree_path])
+            print(f"[✓] Opened in {args.editor}")
+        except Exception as e:
+            print(f"[!] Warning: Could not open editor {args.editor}: {e}")
+            print(f"    Pod created at: {worktree_path}")
+    else:
+        # Use automatic editor selection
+        open_editor(worktree_path)
 
 
 def list_pods(_args: argparse.Namespace) -> None:
@@ -635,6 +700,9 @@ def main() -> None:
     s.add_argument("name")
     s.add_argument(
         "--base", default="main", help="base branch to fork from (default: main)"
+    )
+    s.add_argument(
+        "--editor", help="specify editor to open (overrides config and environment)"
     )
     s.set_defaults(func=start)
 
