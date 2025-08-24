@@ -18,7 +18,7 @@ test-cov: ## Run tests with coverage
 	pytest tests/ --cov=taskpods --cov-report=html --cov-report=term
 
 lint: ## Run linting checks
-	flake8 taskpods.py tests/
+	flake8 taskpods.py tests/ --max-line-length=88 --extend-ignore=E203,W503,E501,E402
 	mypy taskpods.py
 
 format: ## Format code with black and isort

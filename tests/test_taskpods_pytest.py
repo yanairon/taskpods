@@ -5,23 +5,17 @@ Run with: pytest tests/test_taskpods_pytest.py
 """
 
 import os
-import sys
 import subprocess
-from unittest.mock import patch, MagicMock
+import sys
+from unittest.mock import patch
 
 # Add repository root to sys.path to ensure taskpods.py can be imported when running tests
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
-from taskpods import (
-    branch_exists,
-    remote_branch_exists,
-    validate_pod_name,
-    validate_base_branch,
-    check_remote_origin,
-    has_uncommitted_changes,
-    check_git_operations_in_progress,
-    validate_worktree_link,
-)
+# Import after path modification
+from taskpods import (branch_exists, check_git_operations_in_progress,
+                      check_remote_origin, has_uncommitted_changes,
+                      remote_branch_exists, validate_pod_name)
 
 
 class TestTaskpodsValidation:

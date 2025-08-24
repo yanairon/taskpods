@@ -34,10 +34,10 @@ import os
 import shutil
 import subprocess
 import sys
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 
-def get_repo_root():
+def get_repo_root() -> str:
     """Get the Git repository root directory."""
     try:
         result = subprocess.run(
@@ -52,7 +52,7 @@ def get_repo_root():
         sys.exit(1)
 
 
-def get_pods_dir():
+def get_pods_dir() -> str:
     """Get the taskpods directory path."""
     return os.path.join(get_repo_root(), ".taskpods")
 
@@ -431,7 +431,6 @@ def done(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     if not args.no_pr and have("gh"):
-        title = msg
         print("[*] Opening PR via gh…")
         # Determine base branch from metadata if available
         base = "main"
