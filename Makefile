@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov test-fast lint format check clean build publish docs security
+.PHONY: help install install-dev test test-cov test-fast lint format check clean build publish docs security pre-commit pre-commit-run
 
 help:  ## Show this help message
 	@echo 'Usage: make [target]'
