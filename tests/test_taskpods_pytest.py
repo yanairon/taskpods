@@ -1,9 +1,12 @@
+"""
+Pytest-compatible tests for taskpods.
+
+Run with: pytest tests/test_taskpods_pytest.py
+"""
+
 import os
 import sys
-import tempfile
-import shutil
 import subprocess
-import json
 from unittest.mock import patch, MagicMock
 
 # Add repository root to sys.path to ensure taskpods.py can be imported when running tests
@@ -186,6 +189,7 @@ class TestTaskpodsGitOperationsInProgress:
                 pass  # Expected
 
 
+# Standalone tests that can run without mocking
 def test_branch_exists_true_for_main():
     """main branch should exist in the repository"""
     assert branch_exists("main") is True
@@ -199,28 +203,3 @@ def test_branch_exists_false_for_nonexistent():
 def test_remote_branch_exists_false_for_nonexistent():
     """remote branch existence check should return False for a nonexistent branch"""
     assert remote_branch_exists("this-branch-does-not-exist") is False
-
-
-if __name__ == "__main__":
-    # Run basic tests
-    print("Running basic tests...")
-
-    # Create test instances
-    validation_tester = TestTaskpodsValidation()
-    git_ops_tester = TestTaskpodsGitOperations()
-    error_handling_tester = TestTaskpodsErrorHandling()
-    worktree_tester = TestTaskpodsWorktreeValidation()
-    git_progress_tester = TestTaskpodsGitOperationsInProgress()
-
-    # Test validation functions
-    validation_tester.test_validate_pod_name_valid()
-    validation_tester.test_validate_pod_name_invalid_characters()
-    validation_tester.test_validate_pod_name_too_long()
-    validation_tester.test_validate_pod_name_empty()
-
-    # Test Git operations
-    test_branch_exists_true_for_main()
-    test_branch_exists_false_for_nonexistent()
-    test_remote_branch_exists_false_for_nonexistent()
-
-    print("All basic tests passed!")
