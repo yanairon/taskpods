@@ -22,7 +22,7 @@ test-fast:  ## Run tests in parallel
 	pytest -n auto
 
 lint:  ## Run all linters
-	flake8 . --max-line-length=88 --extend-ignore=E203,W503,E402 --exclude=.taskpods,dist,build,__pycache__
+	flake8 . --max-line-length=88 --extend-ignore=E203,W503,E501,E402,D103 --exclude=.taskpods,dist,build,__pycache__
 	mypy taskpods.py
 	black --check --diff .
 

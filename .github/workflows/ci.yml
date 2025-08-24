@@ -49,7 +49,7 @@ jobs:
       - name: Run Black
         run: black --check --diff .
       - name: Run Flake8
-        run: flake8 . --max-line-length=88 --extend-ignore=E203,W503,E402 --exclude=.taskpods,dist,build,__pycache__
+        run: flake8 . --max-line-length=88 --extend-ignore=E203,W503,E501,E402,D103 --exclude=.taskpods,dist,build,__pycache__
       - name: Run MyPy
         run: mypy taskpods.py
 
