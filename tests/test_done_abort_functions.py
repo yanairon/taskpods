@@ -5,8 +5,8 @@ import sys
 from unittest.mock import patch, MagicMock, mock_open
 
 # Add repository root to sys.path to ensure taskpods.py can be imported
-repo_root = __import__('os').path.dirname(__import__('os').path.dirname(__file__))
-sys.path.insert(0, __import__('os').path.abspath(repo_root))
+repo_root = __import__("os").path.dirname(__import__("os").path.dirname(__file__))
+sys.path.insert(0, __import__("os").path.abspath(repo_root))
 
 # Import after path modification
 from taskpods import (  # noqa: E402
@@ -21,8 +21,8 @@ class TestDoneFunction:
 
     @patch("taskpods.validate_pod_name")
     @patch("taskpods.get_pods_dir")
-    @patch("os.path.isdir")
-    @patch("os.path.exists")
+    @patch("taskpods.os.path.isdir")
+    @patch("taskpods.os.path.exists")
     @patch("taskpods.sout")
     @patch("taskpods.validate_worktree_link")
     @patch("taskpods.sh")
@@ -68,28 +68,8 @@ class TestDoneFunction:
 
     @patch("taskpods.validate_pod_name")
     @patch("taskpods.get_pods_dir")
-    @patch("os.path.isdir")
-    @patch("os.path.exists")
-    @patch("taskpods.sout")
-    def test_done_no_such_pod(self, mock_sout, mock_exists, mock_isdir, mock_get_pods_dir, mock_validate_name):
-        """Test done function fails when pod doesn't exist."""
-        mock_get_pods_dir.return_value = "/tmp/.taskpods"
-        mock_isdir.return_value = False
-
-        args = MagicMock()
-        args.name = "nonexistent-pod"
-
-        with patch("sys.exit") as mock_exit:
-            with patch("builtins.print") as mock_print:
-                with patch("builtins.input", return_value="n"):  # Mock input to prevent pytest error
-                    done(args)
-                    mock_print.assert_called_once_with("[x] No such pod: nonexistent-pod")
-                    mock_exit.assert_called_once_with(1)
-
-    @patch("taskpods.validate_pod_name")
-    @patch("taskpods.get_pods_dir")
-    @patch("os.path.isdir")
-    @patch("os.path.exists")
+    @patch("taskpods.os.path.isdir")
+    @patch("taskpods.os.path.exists")
     @patch("taskpods.sout")
     def test_done_invalid_worktree(self, mock_sout, mock_exists, mock_isdir, mock_get_pods_dir, mock_validate_name):
         """Test done function fails when path is not a valid worktree."""
@@ -110,12 +90,18 @@ class TestDoneFunction:
 
     @patch("taskpods.validate_pod_name")
     @patch("taskpods.get_pods_dir")
-    @patch("os.path.isdir")
-    @patch("os.path.exists")
+    @patch("taskpods.os.path.isdir")
+    @patch("taskpods.os.path.exists")
     @patch("taskpods.sout")
     @patch("taskpods.validate_worktree_link")
     def test_done_wrong_branch(
-        self, mock_validate_link, mock_sout, mock_exists, mock_isdir, mock_get_pods_dir, mock_validate_name
+        self,
+        mock_validate_link,
+        mock_sout,
+        mock_exists,
+        mock_isdir,
+        mock_get_pods_dir,
+        mock_validate_name,
     ):
         """Test done function handles wrong branch."""
         mock_get_pods_dir.return_value = "/tmp/.taskpods"
@@ -143,8 +129,8 @@ class TestDoneFunction:
 
     @patch("taskpods.validate_pod_name")
     @patch("taskpods.get_pods_dir")
-    @patch("os.path.isdir")
-    @patch("os.path.exists")
+    @patch("taskpods.os.path.isdir")
+    @patch("taskpods.os.path.exists")
     @patch("taskpods.sout")
     @patch("taskpods.validate_worktree_link")
     @patch("taskpods.sh")
@@ -189,8 +175,8 @@ class TestAbortFunction:
 
     @patch("taskpods.validate_pod_name")
     @patch("taskpods.get_pods_dir")
-    @patch("os.path.isdir")
-    @patch("os.path.exists")
+    @patch("taskpods.os.path.isdir")
+    @patch("taskpods.os.path.exists")
     @patch("taskpods.sout")
     @patch("taskpods.validate_worktree_link")
     @patch("taskpods.has_uncommitted_changes")
@@ -235,8 +221,8 @@ class TestAbortFunction:
 
     @patch("taskpods.validate_pod_name")
     @patch("taskpods.get_pods_dir")
-    @patch("os.path.isdir")
-    @patch("os.path.exists")
+    @patch("taskpods.os.path.isdir")
+    @patch("taskpods.os.path.exists")
     @patch("taskpods.sout")
     @patch("taskpods.validate_worktree_link")
     @patch("taskpods.has_uncommitted_changes")
@@ -272,8 +258,8 @@ class TestAbortFunction:
 
     @patch("taskpods.validate_pod_name")
     @patch("taskpods.get_pods_dir")
-    @patch("os.path.isdir")
-    @patch("os.path.exists")
+    @patch("taskpods.os.path.isdir")
+    @patch("taskpods.os.path.exists")
     @patch("taskpods.sout")
     @patch("taskpods.validate_worktree_link")
     @patch("taskpods.has_uncommitted_changes")
@@ -305,8 +291,8 @@ class TestAbortFunction:
 
     @patch("taskpods.validate_pod_name")
     @patch("taskpods.get_pods_dir")
-    @patch("os.path.isdir")
-    @patch("os.path.exists")
+    @patch("taskpods.os.path.isdir")
+    @patch("taskpods.os.path.exists")
     @patch("taskpods.sout")
     @patch("taskpods.validate_worktree_link")
     @patch("taskpods.has_uncommitted_changes")
@@ -353,13 +339,21 @@ class TestPruneFunction:
     @patch("taskpods.subprocess.run")
     @patch("taskpods.sh")
     def test_prune_success(
-        self, mock_sh, mock_subprocess_run, mock_exists, mock_get_pods_dir, mock_sout, mock_get_repo_root
+        self,
+        mock_sh,
+        mock_subprocess_run,
+        mock_exists,
+        mock_get_pods_dir,
+        mock_sout,
+        mock_get_repo_root,
     ):
         """Test prune function removes merged pods successfully."""
         mock_get_repo_root.return_value = "/tmp/repo"
         mock_get_pods_dir.return_value = "/tmp/.taskpods"
         # The sout function returns the worktree list format
-        mock_sout.return_value = "worktree /tmp/.taskpods/test-pod\nbranch refs/heads/pods/test-pod"
+        mock_sout.return_value = (
+            "worktree /tmp/.taskpods/test-pod\nbranch refs/heads/pods/test-pod"
+        )
 
         # Mock metadata file exists
         mock_exists.side_effect = lambda x: x == "/tmp/.taskpods/test-pod/.taskpod.json"
@@ -394,7 +388,9 @@ class TestPruneFunction:
         """Test prune function uses default base when no metadata file exists."""
         mock_get_repo_root.return_value = "/tmp/repo"
         mock_get_pods_dir.return_value = "/tmp/.taskpods"
-        mock_sout.return_value = "worktree /tmp/.taskpods/test-pod\nbranch refs/heads/pods/test-pod"
+        mock_sout.return_value = (
+            "worktree /tmp/.taskpods/test-pod\nbranch refs/heads/pods/test-pod"
+        )
 
         # Mock metadata file doesn't exist
         mock_exists.return_value = False

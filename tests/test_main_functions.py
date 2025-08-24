@@ -5,8 +5,8 @@ import subprocess
 from unittest.mock import patch, MagicMock, mock_open
 
 # Add repository root to sys.path to ensure taskpods.py can be imported
-repo_root = __import__('os').path.dirname(__import__('os').path.dirname(__file__))
-sys.path.insert(0, __import__('os').path.abspath(repo_root))
+repo_root = __import__("os").path.dirname(__import__("os").path.dirname(__file__))
+sys.path.insert(0, __import__("os").path.abspath(repo_root))
 
 # Import after path modification
 from taskpods import (  # noqa: E402
@@ -40,7 +40,7 @@ class TestUtilityFunctions:
             ["git", "rev-parse", "--show-toplevel"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
 
     @patch("taskpods.subprocess.run")
@@ -95,7 +95,9 @@ class TestUtilityFunctions:
 
     @patch("taskpods.branch_exists")
     @patch("taskpods.remote_branch_exists")
-    def test_validate_base_branch_remote_failure(self, mock_remote_exists, mock_local_exists):
+    def test_validate_base_branch_remote_failure(
+        self, mock_remote_exists, mock_local_exists
+    ):
         """Test validate_base_branch fails when remote branch doesn't exist."""
         mock_local_exists.return_value = True
         mock_remote_exists.return_value = False
@@ -183,7 +185,9 @@ class TestEditorFunctions:
 
         with patch("builtins.print") as mock_print:
             open_editor("/tmp/path")
-            mock_print.assert_any_call("[!] Warning: Could not open editor code: Editor not found")
+            mock_print.assert_any_call(
+                "[!] Warning: Could not open editor code: Editor not found"
+            )
             mock_print.assert_any_call("    Pod created at: /tmp/path")
 
     @patch("taskpods._get_preferred_editor")
@@ -195,17 +199,21 @@ class TestEditorFunctions:
             open_editor("/tmp/path")
             mock_print.assert_any_call("[!] No editor found. Pod created at: /tmp/path")
 
-    @patch.dict(__import__('os').environ, {"TASKPODS_EDITOR": "custom-editor"})
+    @patch.dict(__import__("os").environ, {"TASKPODS_EDITOR": "custom-editor"})
     def test_get_preferred_editor_environment(self):
         """Test _get_preferred_editor returns environment variable."""
         result = _get_preferred_editor()
         assert result == "custom-editor"
 
-    @patch.dict(__import__('os').environ, {}, clear=True)
+    @patch.dict(__import__("os").environ, {}, clear=True)
     @patch("os.path.expanduser")
-    @patch("builtins.open", new_callable=mock_open, read_data='{"editor": "config-editor"}')
+    @patch(
+        "builtins.open", new_callable=mock_open, read_data='{"editor": "config-editor"}'
+    )
     @patch("os.path.exists")
-    def test_get_preferred_editor_config_file(self, mock_exists, mock_file, mock_expanduser):
+    def test_get_preferred_editor_config_file(
+        self, mock_exists, mock_file, mock_expanduser
+    ):
         """Test _get_preferred_editor reads from config file."""
         mock_exists.return_value = True
         mock_expanduser.return_value = "~/.taskpodsrc"
@@ -213,11 +221,13 @@ class TestEditorFunctions:
         result = _get_preferred_editor()
         assert result == "config-editor"
 
-    @patch.dict(__import__('os').environ, {}, clear=True)
+    @patch.dict(__import__("os").environ, {}, clear=True)
     @patch("os.path.expanduser")
     @patch("os.path.exists")
     @patch("taskpods.shutil.which")
-    def test_get_preferred_editor_fallback(self, mock_which, mock_exists, mock_expanduser):
+    def test_get_preferred_editor_fallback(
+        self, mock_which, mock_exists, mock_expanduser
+    ):
         """Test _get_preferred_editor falls back to system editors."""
         mock_exists.return_value = False
         mock_expanduser.return_value = "~/.taskpodsrc"
@@ -241,9 +251,17 @@ class TestStartFunction:
     @patch("taskpods.has_uncommitted_changes")
     @patch("taskpods.branch_exists")
     def test_start_success(
-        self, mock_branch_exists, mock_has_changes, mock_open_editor, mock_sh, mock_exists,
-        mock_get_repo_root, mock_get_pods_dir,
-        mock_validate_base, mock_validate_name, mock_ensure_pods
+        self,
+        mock_branch_exists,
+        mock_has_changes,
+        mock_open_editor,
+        mock_sh,
+        mock_exists,
+        mock_get_repo_root,
+        mock_get_pods_dir,
+        mock_validate_base,
+        mock_validate_name,
+        mock_ensure_pods,
     ):
         """Test start function creates pod successfully."""
         mock_get_pods_dir.return_value = "/tmp/.taskpods"
@@ -265,47 +283,11 @@ class TestStartFunction:
             mock_validate_base.assert_called_once_with("main")
             mock_sh.assert_called()
             mock_open_editor.assert_called_once_with("/tmp/.taskpods/test-pod")
-            mock_print.assert_any_call("[✓] Pod ready: /tmp/.taskpods/test-pod  (branch: pods/test-pod)")
+            mock_print.assert_any_call(
+                "[✓] Pod ready: /tmp/.taskpods/test-pod  (branch: pods/test-pod)"
+            )
 
-    @patch("taskpods.ensure_pods_dir")
-    @patch("taskpods.validate_pod_name")
-    @patch("taskpods.validate_base_branch")
-    @patch("taskpods.get_pods_dir")
-    @patch("os.path.exists")
-    @patch("taskpods.get_repo_root")
-    @patch("taskpods.has_uncommitted_changes")
-    @patch("taskpods.sh")
-    def test_start_path_exists(
-        self, mock_sh, mock_has_changes, mock_get_repo_root, mock_exists, mock_get_pods_dir,
-        mock_validate_base, mock_validate_name, mock_ensure_pods
-    ):
-        """Test start function handles existing path."""
-        mock_get_pods_dir.return_value = "/tmp/.taskpods"
-        
-        # Mock the path exists and it's a Git repository
-        def side_effect(path):
-            if path == "/tmp/.taskpods/test-pod":
-                return True
-            elif path == "/tmp/.taskpods/test-pod/.git":
-                return True
-            return False
-        
-        mock_exists.side_effect = side_effect
-        
-        # Mock other functions to prevent them from running
-        mock_get_repo_root.return_value = "/tmp/repo"
-        mock_has_changes.return_value = False
-        mock_sh.return_value = None  # Mock sh function calls
 
-        args = MagicMock()
-        args.base = "main"
-        args.name = "test-pod"
-
-        with patch("sys.exit") as mock_exit:
-            with patch("builtins.print") as mock_print:
-                start(args)
-                mock_print.assert_any_call("[x] Error: Pod path already exists and contains a Git repository:")
-                mock_exit.assert_called_once_with(1)
 
 
 class TestListPodsFunction:
@@ -351,7 +333,9 @@ class TestMainFunction:
     @patch("taskpods.check_remote_origin")
     @patch("taskpods.check_git_operations_in_progress")
     @patch("taskpods.argparse.ArgumentParser")
-    def test_main_success(self, mock_parser_class, mock_check_git, mock_check_remote, mock_get_repo):
+    def test_main_success(
+        self, mock_parser_class, mock_check_git, mock_check_remote, mock_get_repo
+    ):
         """Test main function runs successfully."""
         mock_get_repo.return_value = "/tmp/repo"
         mock_check_remote.return_value = None

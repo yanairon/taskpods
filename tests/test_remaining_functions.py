@@ -5,8 +5,8 @@ import sys
 from unittest.mock import patch, MagicMock
 
 # Add repository root to sys.path to ensure taskpods.py can be imported
-repo_root = __import__('os').path.dirname(__import__('os').path.dirname(__file__))
-sys.path.insert(0, __import__('os').path.abspath(repo_root))
+repo_root = __import__("os").path.dirname(__import__("os").path.dirname(__file__))
+sys.path.insert(0, __import__("os").path.abspath(repo_root))
 
 # Import after path modification
 from taskpods import (  # noqa: E402
@@ -26,11 +26,21 @@ class TestValidateWorktreeLink:
     @patch("taskpods.get_repo_root")
     @patch("taskpods.sout")
     @patch("os.path.samefile")
-    def test_validate_worktree_link_success(self, mock_samefile, mock_sout, mock_get_repo_root):
+    @patch("os.path.isfile")
+    @patch("builtins.open")
+    def test_validate_worktree_link_success(
+        self, mock_open, mock_isfile, mock_samefile, mock_sout, mock_get_repo_root
+    ):
         """Test validate_worktree_link succeeds with valid worktree."""
         mock_get_repo_root.return_value = "/tmp/repo"
         mock_sout.return_value = "/tmp/.taskpods/test-pod"
-        mock_samefile.return_value = True
+        mock_isfile.return_value = True  # .git file exists
+        mock_samefile.return_value = True  # Same file check passes
+
+        # Mock the file content to simulate a valid worktree
+        mock_file = MagicMock()
+        mock_file.read.return_value = "gitdir: /tmp/repo/.git/worktrees/test-pod"
+        mock_open.return_value.__enter__.return_value = mock_file
 
         # Should not raise exception
         with patch("sys.exit") as mock_exit:
@@ -40,11 +50,21 @@ class TestValidateWorktreeLink:
     @patch("taskpods.get_repo_root")
     @patch("taskpods.sout")
     @patch("os.path.samefile")
-    def test_validate_worktree_link_failure(self, mock_samefile, mock_sout, mock_get_repo_root):
+    @patch("os.path.isfile")
+    @patch("builtins.open")
+    def test_validate_worktree_link_failure(
+        self, mock_open, mock_isfile, mock_samefile, mock_sout, mock_get_repo_root
+    ):
         """Test validate_worktree_link fails with invalid worktree."""
         mock_get_repo_root.return_value = "/tmp/repo"
         mock_sout.return_value = "/tmp/.taskpods/different-pod"  # Different path
-        mock_samefile.return_value = False
+        mock_isfile.return_value = True  # .git file exists
+        mock_samefile.return_value = False  # Same file check fails
+
+        # Mock the file content to simulate a valid worktree format
+        mock_file = MagicMock()
+        mock_file.read.return_value = "gitdir: /tmp/repo/.git/worktrees/test-pod"
+        mock_open.return_value.__enter__.return_value = mock_file
 
         with patch("sys.exit") as mock_exit:
             with patch("builtins.print") as mock_print:
@@ -56,18 +76,28 @@ class TestValidateWorktreeLink:
 
     @patch("taskpods.get_repo_root")
     @patch("taskpods.sout")
-    def test_validate_worktree_link_git_error(self, mock_sout, mock_get_repo_root):
+    @patch("os.path.isfile")
+    def test_validate_worktree_link_git_error(
+        self, mock_isfile, mock_sout, mock_get_repo_root
+    ):
         """Test validate_worktree_link handles git error."""
         mock_get_repo_root.return_value = "/tmp/repo"
         mock_sout.side_effect = subprocess.CalledProcessError(1, "git worktree list")
+        mock_isfile.return_value = True  # .git file exists
 
         with patch("sys.exit") as mock_exit:
             with patch("builtins.print") as mock_print:
-                validate_worktree_link("/tmp/.taskpods/test-pod")
-                mock_print.assert_any_call(
-                    "[x] Error reading worktree link: [Errno 2] No such file or directory: '/tmp/.taskpods/test-pod/.git'"
-                )
-                mock_exit.assert_called_once_with(1)
+                with patch(
+                    "builtins.open",
+                    side_effect=IOError(
+                        "[Errno 2] No such file or directory: '/tmp/.taskpods/test-pod/.git'"
+                    ),
+                ):
+                    validate_worktree_link("/tmp/.taskpods/test-pod")
+                    mock_print.assert_any_call(
+                        "[x] Error reading worktree link: [Errno 2] No such file or directory: '/tmp/.taskpods/test-pod/.git'"
+                    )
+                    mock_exit.assert_called_once_with(1)
 
 
 class TestCheckRemoteOrigin:
@@ -91,12 +121,16 @@ class TestCheckRemoteOrigin:
     def test_check_remote_origin_failure(self, mock_run, mock_get_repo_root):
         """Test check_remote_origin fails when origin is not configured."""
         mock_get_repo_root.return_value = "/tmp/repo"
-        mock_run.side_effect = subprocess.CalledProcessError(1, "git remote get-url origin")
+        mock_run.side_effect = subprocess.CalledProcessError(
+            1, "git remote get-url origin"
+        )
 
         with patch("sys.exit") as mock_exit:
             with patch("builtins.print") as mock_print:
                 check_remote_origin()
-                mock_print.assert_called_once_with("[x] Error: Remote 'origin' is not configured")
+                mock_print.assert_called_once_with(
+                    "[x] Error: Remote 'origin' is not configured"
+                )
                 mock_exit.assert_called_once_with(1)
 
 
@@ -105,7 +139,9 @@ class TestCheckGitOperationsInProgress:
 
     @patch("taskpods.get_repo_root")
     @patch("os.path.exists")
-    def test_check_git_operations_in_progress_clean(self, mock_exists, mock_get_repo_root):
+    def test_check_git_operations_in_progress_clean(
+        self, mock_exists, mock_get_repo_root
+    ):
         """Test check_git_operations_in_progress when no operations are in progress."""
         mock_get_repo_root.return_value = "/tmp/repo"
         mock_exists.return_value = False
@@ -115,7 +151,9 @@ class TestCheckGitOperationsInProgress:
 
     @patch("taskpods.get_repo_root")
     @patch("os.path.exists")
-    def test_check_git_operations_in_progress_merge(self, mock_exists, mock_get_repo_root):
+    def test_check_git_operations_in_progress_merge(
+        self, mock_exists, mock_get_repo_root
+    ):
         """Test check_git_operations_in_progress when merge is in progress."""
         mock_get_repo_root.return_value = "/tmp/repo"
 
@@ -134,7 +172,9 @@ class TestCheckGitOperationsInProgress:
 
     @patch("taskpods.get_repo_root")
     @patch("os.path.exists")
-    def test_check_git_operations_in_progress_rebase(self, mock_exists, mock_get_repo_root):
+    def test_check_git_operations_in_progress_rebase(
+        self, mock_exists, mock_get_repo_root
+    ):
         """Test check_git_operations_in_progress when rebase is in progress."""
         mock_get_repo_root.return_value = "/tmp/repo"
 
@@ -153,7 +193,9 @@ class TestCheckGitOperationsInProgress:
 
     @patch("taskpods.get_repo_root")
     @patch("os.path.exists")
-    def test_check_git_operations_in_progress_cherry_pick(self, mock_exists, mock_get_repo_root):
+    def test_check_git_operations_in_progress_cherry_pick(
+        self, mock_exists, mock_get_repo_root
+    ):
         """Test check_git_operations_in_progress when cherry-pick is in progress."""
         mock_get_repo_root.return_value = "/tmp/repo"
 
