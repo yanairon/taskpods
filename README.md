@@ -23,11 +23,13 @@ pip install taskpods
 ### Alternative Installation Methods
 
 **From GitHub** (latest development version):
+
 ```bash
 pip install git+https://github.com/yanairon/taskpods.git
 ```
 
 **Manual installation**:
+
 ```bash
 # Download and install manually
 curl -O https://raw.githubusercontent.com/yanairon/taskpods/main/taskpods.py
@@ -36,6 +38,7 @@ sudo mv taskpods.py /usr/local/bin/taskpods
 ```
 
 **Requirements**:
+
 - Python 3.9+
 - Git 2.5+ with worktree support
 - A Git repository with a remote named `origin`
