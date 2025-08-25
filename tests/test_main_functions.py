@@ -1,27 +1,27 @@
 """Test suite for main functions in taskpods module."""
 
-import sys
 import subprocess
-from unittest.mock import patch, MagicMock, mock_open
+import sys
+from unittest.mock import MagicMock, mock_open, patch
 
 # Add repository root to sys.path to ensure taskpods.py can be imported
 repo_root = __import__("os").path.dirname(__import__("os").path.dirname(__file__))
 sys.path.insert(0, __import__("os").path.abspath(repo_root))
 
 # Import after path modification
-from taskpods import (  # noqa: E402
-    start,
-    main,
-    get_repo_root,
-    get_pods_dir,
-    ensure_pods_dir,
-    validate_base_branch,
-    open_editor,
+from taskpods import ensure_pods_dir  # noqa: E402
+from taskpods import (
     _get_preferred_editor,
-    sh,
-    sout,
+    get_pods_dir,
+    get_repo_root,
     have,
     list_pods,
+    main,
+    open_editor,
+    sh,
+    sout,
+    start,
+    validate_base_branch,
 )
 
 
@@ -372,6 +372,38 @@ class TestMainFunction:
                     with patch("taskpods.check_git_operations_in_progress"):
                         main()
                         mock_exit.assert_called_once_with(1)
+
+    @patch("taskpods.get_repo_root")
+    @patch("taskpods.check_remote_origin")
+    @patch("taskpods.check_git_operations_in_progress")
+    @patch("taskpods.argparse.ArgumentParser")
+    def test_main_support_command(
+        self, mock_parser_class, mock_check_git, mock_check_remote, mock_get_repo
+    ):
+        """Test main function handles support command."""
+        mock_get_repo.return_value = "/tmp/repo"
+        mock_check_remote.return_value = None
+        mock_check_git.return_value = None
+
+        mock_parser = MagicMock()
+        mock_parser_class.return_value = mock_parser
+        mock_subparsers = MagicMock()
+        mock_parser.add_subparsers.return_value = mock_subparsers
+
+        mock_args = MagicMock()
+        mock_args.cmd = "support"
+        mock_args.func = MagicMock()
+        mock_parser.parse_args.return_value = mock_args
+
+        main()
+
+        # Verify that add_parser was called for support command
+        mock_subparsers.add_parser.assert_any_call(
+            "support",
+            help="Show links to star or support Taskpods",
+            description="Prints GitHub and Ko-fi links to support Taskpods.",
+        )
+        mock_args.func.assert_called_once_with(mock_args)
 
 
 if __name__ == "__main__":
