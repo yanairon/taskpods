@@ -4,41 +4,48 @@
 [![Codecov](https://codecov.io/gh/yanairon/taskpods/branch/main/graph/badge.svg)](https://codecov.io/gh/yanairon/taskpods)
 [![PyPI](https://img.shields.io/pypi/v/taskpods.svg)](https://pypi.org/project/taskpods/)
 [![Python](https://img.shields.io/pypi/pyversions/taskpods.svg)](https://pypi.org/project/taskpods/)
-[![License](https://img.shields.io/github/license/yanairon/taskpods.svg)](https://github.com/yanairon/taskpods/blob/main/LICENSE)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License](https://img.shields.io/github/license/yanairon/taskpods.svg)](LICENSE)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)  
+[![GitHub Sponsors](https://img.shields.io/badge/sponsor-%F0%9F%A7%91%E2%80%8D%F0%9F%92%BB-ff69b4)](https://github.com/sponsors/yanairon)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X51K73WN)
 
-`taskpods` is a tiny command‑line tool that lets you spawn disposable "AI pods" in your Git repository.  Each pod is its own worktree and branch, so you can run Copilot, Cursor, or Claude Code on isolated tasks without polluting your main branch.  When you're done, you can commit and push the work to a pull request or nuke the pod entirely.
+---
 
-## Features
+`taskpods` is a lightweight CLI that lets you spin up disposable **AI pods** inside your Git repo.  
+Each pod is an isolated Git worktree/branch — perfect for experimenting with Copilot, Cursor, or Claude Code without polluting `main`.  
+When done, you can merge, PR, or nuke the pod entirely.
 
-- **Instant sandbox:** `taskpods start <name>` creates a new worktree under `.taskpods/<name>` and checks out a branch `pods/<name>` from a base branch (default `main`).
-- **Clean exit:** `taskpods done <name>` stages, commits, and pushes everything in the pod, optionally opening a GitHub pull request via [`gh` CLI], then removes the worktree.
-- **Abort button:** `taskpods abort <name>` deletes an unpushed pod and its branch without a trace.
-- **Status overview:** `taskpods list` shows your active pods and where they live in the file system.
-- **House‑keeping:** `taskpods prune` removes pods whose branches have been merged into their base branch.
+---
 
-## Installation
+## ✨ Features
 
-### Quick Install (Recommended)
+- **Instant sandbox:** `taskpods start <name>` → creates `.taskpods/<name>` and `pods/<name>` from `main`.  
+- **Clean exit:** `taskpods done <name>` → commit, push, open a PR (via [`gh` CLI]), then remove the worktree.  
+- **Abort button:** `taskpods abort <name>` → deletes an unpushed pod safely.  
+- **Status overview:** `taskpods list` → see all active pods and paths.  
+- **Housekeeping:** `taskpods prune` → removes pods already merged upstream.  
 
-Install from PyPI:
+---
+
+## 🚀 Installation
+
+### Quick Install
 
 ```bash
 pip install taskpods
 ```
 
-### Alternative Installation Methods
+### Alternatives
 
-**From GitHub** (latest development version):
+From GitHub (latest dev):
 
 ```bash
 pip install git+https://github.com/yanairon/taskpods.git
 ```
 
-**Manual installation**:
+Manual:
 
 ```bash
-# Download and install manually
 curl -O https://raw.githubusercontent.com/yanairon/taskpods/main/taskpods.py
 chmod +x taskpods.py
 sudo mv taskpods.py /usr/local/bin/taskpods
@@ -46,79 +53,58 @@ sudo mv taskpods.py /usr/local/bin/taskpods
 
 **Requirements**:
 
-- Python 3.9+
-- Git 2.5+ with worktree support
-- A Git repository with a remote named `origin`
+- Python 3.9+  
+- Git 2.5+ with worktree support  
+- A Git repo with a remote named `origin`  
 
-## Usage
+---
 
-### Create a new pod
+## 📖 Usage
 
-```bash
-taskpods start fix‑typos
-```
-
-This will:
-
-1. Fetch the latest changes from `main` and fast‑forward your local `main`.
-2. Create a new branch `pods/fix‑typos` from `main`.
-3. Add a Git worktree at `.taskpods/fix‑typos`.
-4. Drop you into a new editor window (Cursor if available, otherwise VS Code) with the worktree opened.
-
-### Finish a pod and create a pull request
+### Start a new pod
 
 ```bash
-taskpods done fix‑typos -m "Fix docs typos" --remove
+taskpods start fix-typos
 ```
 
-This will stage and commit all changes in the worktree with the given message, push the branch to `origin`, open a pull request via the [`gh` CLI] (if installed), and remove the worktree.  The branch remains so you can still interact with the PR.
-
-### Abort a pod
+### Finish & PR
 
 ```bash
-taskpods abort fix‑typos
+taskpods done fix-typos -m "Fix docs typos" --remove
 ```
 
-If the branch hasn't been pushed to `origin`, this will delete the worktree and local branch.  It refuses to abort pods whose branches are already on `origin` to avoid data loss.
+### Abort
 
-### List active pods
+```bash
+taskpods abort fix-typos
+```
+
+### List pods
 
 ```bash
 taskpods list
 ```
 
-Lists all worktrees under `.taskpods`, showing the pod name, branch, and path.
-
-### Prune merged pods
+### Prune merged
 
 ```bash
 taskpods prune
 ```
 
-Finds pods whose remote branches are fully merged into their base branch and removes their worktrees.
+---
 
-## Requirements
+## ⚙️ Editor Configuration
 
-- **Python 3.9+** – This script uses only the standard library.
-- **Git** – You need Git installed with worktree support (Git 2.5+).  The repository must already be initialised with a remote named `origin`.
-- **Editor (optional)** – The script will try to open your preferred editor. You can configure it via:
-  - Environment variable: `export TASKPODS_EDITOR="vim"`
-  - Configuration file: `~/.taskpodsrc`
-  - Command line: `taskpods start my-feature --editor vim`
-  - Auto-detection: Falls back to common editors if none configured
-- **`gh` CLI (optional)** – If installed, `taskpods done` will automatically open a GitHub pull request.  Otherwise, it simply pushes the branch and prints a success message.
+- Env var:
 
-## Editor Configuration
-
-### Environment Variable
 ```bash
 export TASKPODS_EDITOR="vim"
 export TASKPODS_EDITOR="code"
 export TASKPODS_EDITOR="cursor"
 ```
 
-### Configuration File
-Create `~/.taskpodsrc`:
+- Config file `~/.taskpodsrc`:
+
 ```json
 {
   "editor": "vim",
@@ -126,43 +112,41 @@ Create `~/.taskpodsrc`:
 }
 ```
 
-### Command Line
+- CLI flag:
+
 ```bash
 taskpods start my-feature --editor vim
-taskpods start my-feature --editor code
-taskpods start my-feature --editor cursor
 ```
 
-### Supported Editors
-- **Modern**: Cursor, VS Code, Sublime Text, Atom
-- **Terminal**: Vim, Neovim, Emacs
-- **Custom**: Any editor available in your PATH
-
-## Support
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X51K73WN)
-
-## License
-
-This project is released under the MIT License.  See the [LICENSE](LICENSE) file for details.
+Supported editors: Cursor, VS Code, Sublime, Atom, Vim/Neovim, Emacs, or any in your PATH.
 
 ---
 
-### Why worktrees?
+## ❤️ Support
 
-Git worktrees let you have multiple branches checked out in separate directories without duplicating your entire `.git` object store.  They're faster than clones, don't waste disk space, and make cleanup trivial.  `taskpods` wraps a handful of `git worktree` commands with sensible defaults and adds quality‑of‑life features like automatic PR creation and safe aborts.
+If `taskpods` saves you time, please consider supporting:  
 
-### DISCLAIMER
+- [GitHub Sponsors](https://github.com/sponsors/yanairon)  
+- [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X51K73WN)  
 
-This tool is provided "as is" with no warranty.  It writes to your Git repository and could potentially cause data loss if used incorrectly.  Read the code, use it at your own risk, and always back up anything important before experimenting.
+Your support helps keep the project maintained and evolving for the community!
 
 ---
 
-## Development
+## 📜 License
 
-*For contributors and developers:*
+MIT – see [LICENSE](LICENSE).
 
-### Setting up the development environment
+---
+
+## 🤔 Why worktrees?
+
+Git worktrees let you check out multiple branches in separate dirs without cloning. They’re fast, disk-light, and easy to clean up.  
+`taskpods` wraps the common `git worktree` operations with sensible defaults and quality-of-life features like PR creation and safe aborts.
+
+---
+
+## 👩‍💻 Development
 
 ```bash
 git clone https://github.com/yanairon/taskpods.git
@@ -171,30 +155,19 @@ pip install -e ".[dev]"
 pre-commit install
 ```
 
-### Running tests
+Run tests:
 
 ```bash
-# Run all tests
 make test
-
-# Run tests with coverage
 make test-cov
-
-# Run all quality checks
 make check
 ```
 
-### Code quality
+Tools used: **Black**, **Flake8**, **MyPy**, **Pre-commit**.
 
-The project uses several tools to maintain code quality:
+---
 
-- **Black** - Code formatting
-- **Flake8** - Linting
-- **MyPy** - Type checking
-- **Pre-commit** - Automated quality checks
+## 🤝 Contributing
 
-Run `make format` to format code and `make lint` to check for issues.
-
-## Contributing
-
-Contributions, bug reports, and feature requests are welcome!  Feel free to open an issue or submit a pull request.
+Contributions, bug reports, and feature requests are welcome!  
+Open an issue or submit a PR.
