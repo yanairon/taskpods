@@ -2,21 +2,21 @@
 
 import subprocess
 import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 # Add repository root to sys.path to ensure taskpods.py can be imported
 repo_root = __import__("os").path.dirname(__import__("os").path.dirname(__file__))
 sys.path.insert(0, __import__("os").path.abspath(repo_root))
 
 # Import after path modification
-from taskpods import (  # noqa: E402
-    validate_worktree_link,
-    check_remote_origin,
+from taskpods import branch_exists  # noqa: E402
+from taskpods import (
     check_git_operations_in_progress,
-    validate_pod_name,
-    branch_exists,
-    remote_branch_exists,
+    check_remote_origin,
     has_uncommitted_changes,
+    remote_branch_exists,
+    validate_pod_name,
+    validate_worktree_link,
 )
 
 

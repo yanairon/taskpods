@@ -2,18 +2,14 @@
 
 import subprocess
 import sys
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import MagicMock, mock_open, patch
 
 # Add repository root to sys.path to ensure taskpods.py can be imported
 repo_root = __import__("os").path.dirname(__import__("os").path.dirname(__file__))
 sys.path.insert(0, __import__("os").path.abspath(repo_root))
 
 # Import after path modification
-from taskpods import (  # noqa: E402
-    done,
-    abort,
-    prune,
-)
+from taskpods import abort, done, prune, support  # noqa: E402
 
 
 class TestDoneFunction:
@@ -426,6 +422,32 @@ class TestPruneFunction:
                 mock_subprocess_run.assert_called()
 
 
+class TestSupportFunction:
+    """Test the support function."""
+
+    def test_support_output(self):
+        """Test support function prints correct output."""
+        args = MagicMock()
+
+        with patch("builtins.print") as mock_print:
+            support(args)
+
+            # Verify that all expected messages are printed
+            expected_messages = [
+                "💜 Thanks for using Taskpods!",
+                "Star on GitHub: https://github.com/yanairon/taskpods",
+                "Support development: https://ko-fi.com/yanairon",
+                "Tip: run `taskpods --help` to see all commands.",
+            ]
+
+            # Check that each expected message was printed
+            for message in expected_messages:
+                mock_print.assert_any_call(message)
+
+            # Verify that print was called at least the expected number of times
+            assert mock_print.call_count >= len(expected_messages)
+
+
 if __name__ == "__main__":
     # Run tests
     print("Running done/abort function tests...")
@@ -434,5 +456,6 @@ if __name__ == "__main__":
     done_tester = TestDoneFunction()
     abort_tester = TestAbortFunction()
     prune_tester = TestPruneFunction()
+    support_tester = TestSupportFunction()
 
     print("All done/abort function tests completed!")

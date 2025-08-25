@@ -24,6 +24,7 @@ Usage:
     taskpods abort spike-experiment
     taskpods list
     taskpods prune
+    taskpods support
 
 See the README.md for more details.
 """
@@ -690,6 +691,15 @@ def prune(_args: argparse.Namespace) -> None:
             continue
 
 
+def support(_args: argparse.Namespace) -> None:
+    """Print project links for stars/sponsorship."""
+    print("💜 Thanks for using Taskpods!")
+    print("Star on GitHub: https://github.com/yanairon/taskpods")
+    print("Support development: https://ko-fi.com/yanairon")
+    print()
+    print("Tip: run `taskpods --help` to see all commands.")
+
+
 def main() -> None:
     # Ensure we're in a Git repository before proceeding
     try:
@@ -736,6 +746,13 @@ def main() -> None:
 
     s5 = sub.add_parser("prune", help="remove merged pods")
     s5.set_defaults(func=prune)
+
+    s6 = sub.add_parser(
+        "support",
+        help="Show links to star or support Taskpods",
+        description="Prints GitHub and Ko-fi links to support Taskpods.",
+    )
+    s6.set_defaults(func=support)
 
     args = parser.parse_args()
     if not args.cmd:
