@@ -27,44 +27,35 @@ class TestValidateWorktreeLink:
     @patch("taskpods.sout")
     @patch("os.path.samefile")
     @patch("os.path.isfile")
-    @patch("builtins.open")
     def test_validate_worktree_link_success(
-        self, mock_open, mock_isfile, mock_samefile, mock_sout, mock_get_repo_root
+        self, mock_isfile, mock_samefile, mock_sout, mock_get_repo_root
     ):
         """Test validate_worktree_link succeeds with valid worktree."""
         mock_get_repo_root.return_value = "/tmp/repo"
-        mock_sout.return_value = "/tmp/.taskpods/test-pod"
         mock_isfile.return_value = True  # .git file exists
-        mock_samefile.return_value = True  # Same file check passes
-
-        # Mock the file content to simulate a valid worktree
-        mock_file = MagicMock()
-        mock_file.read.return_value = "gitdir: /tmp/repo/.git/worktrees/test-pod"
-        mock_open.return_value.__enter__.return_value = mock_file
+        mock_sout.return_value = "/tmp/repo/.git"  # --git-common-dir
+        mock_samefile.return_value = True
 
         # Should not raise exception
         with patch("sys.exit") as mock_exit:
             validate_worktree_link("/tmp/.taskpods/test-pod")
             mock_exit.assert_not_called()
+        mock_sout.assert_called_once_with(
+            ["git", "-C", "/tmp/.taskpods/test-pod", "rev-parse", "--git-common-dir"]
+        )
 
     @patch("taskpods.get_repo_root")
     @patch("taskpods.sout")
     @patch("os.path.samefile")
     @patch("os.path.isfile")
-    @patch("builtins.open")
     def test_validate_worktree_link_failure(
-        self, mock_open, mock_isfile, mock_samefile, mock_sout, mock_get_repo_root
+        self, mock_isfile, mock_samefile, mock_sout, mock_get_repo_root
     ):
-        """Test validate_worktree_link fails with invalid worktree."""
+        """Test validate_worktree_link fails with a foreign worktree."""
         mock_get_repo_root.return_value = "/tmp/repo"
-        mock_sout.return_value = "/tmp/.taskpods/different-pod"  # Different path
         mock_isfile.return_value = True  # .git file exists
-        mock_samefile.return_value = False  # Same file check fails
-
-        # Mock the file content to simulate a valid worktree format
-        mock_file = MagicMock()
-        mock_file.read.return_value = "gitdir: /tmp/repo/.git/worktrees/test-pod"
-        mock_open.return_value.__enter__.return_value = mock_file
+        mock_sout.return_value = "/tmp/other/.git"  # different repository
+        mock_samefile.return_value = False
 
         with patch("sys.exit") as mock_exit:
             with patch("builtins.print") as mock_print:
@@ -83,24 +74,17 @@ class TestValidateWorktreeLink:
     ):
         """Test validate_worktree_link handles git error."""
         mock_get_repo_root.return_value = "/tmp/repo"
-        mock_sout.side_effect = subprocess.CalledProcessError(1, "git worktree list")
         mock_isfile.return_value = True  # .git file exists
+        mock_sout.side_effect = subprocess.CalledProcessError(128, "git")
 
         with patch("sys.exit") as mock_exit:
             with patch("builtins.print") as mock_print:
-                with patch(
-                    "builtins.open",
-                    side_effect=IOError(
-                        "[Errno 2] No such file or directory: "
-                        "'/tmp/.taskpods/test-pod/.git'"
-                    ),
-                ):
-                    validate_worktree_link("/tmp/.taskpods/test-pod")
-                    mock_print.assert_any_call(
-                        "[x] Error reading worktree link: [Errno 2] No such file or "
-                        "directory: '/tmp/.taskpods/test-pod/.git'"
-                    )
-                    mock_exit.assert_called_once_with(1)
+                validate_worktree_link("/tmp/.taskpods/test-pod")
+                mock_print.assert_any_call(
+                    "[x] Error: /tmp/.taskpods/test-pod is not a valid linked "
+                    "worktree"
+                )
+                mock_exit.assert_called_once_with(1)
 
 
 class TestCheckRemoteOrigin:
@@ -387,3 +371,89 @@ if __name__ == "__main__":
     changes_tester = TestHasUncommittedChanges()
 
     print("All remaining function tests completed!")
+
+
+class TestValidateWorktreeLinkEdgeCases:
+    """Edge-case coverage for validate_worktree_link."""
+
+    @patch("taskpods.get_repo_root")
+    @patch("os.path.isfile")
+    def test_no_git_file(self, mock_isfile, mock_get_repo_root):
+        """A plain directory (no .git file) is rejected."""
+        mock_get_repo_root.return_value = "/tmp/repo"
+        mock_isfile.return_value = False
+
+        with patch("sys.exit") as mock_exit:
+            with patch("builtins.print") as mock_print:
+                validate_worktree_link("/tmp/.taskpods/test-pod")
+                mock_print.assert_any_call(
+                    "[x] Error: /tmp/.taskpods/test-pod is not a valid linked "
+                    "worktree"
+                )
+                mock_exit.assert_any_call(1)
+
+    @patch("taskpods.get_repo_root")
+    @patch("taskpods.sout")
+    @patch("os.path.samefile")
+    @patch("os.path.isfile")
+    def test_relative_common_dir(
+        self, mock_isfile, mock_samefile, mock_sout, mock_get_repo_root
+    ):
+        """A relative --git-common-dir is resolved against the worktree."""
+        mock_get_repo_root.return_value = "/tmp/repo"
+        mock_isfile.return_value = True
+        mock_sout.return_value = "../../.git"  # relative common dir
+        mock_samefile.return_value = True
+
+        with patch("sys.exit") as mock_exit:
+            validate_worktree_link("/tmp/.taskpods/test-pod")
+            mock_exit.assert_not_called()
+        mock_samefile.assert_called_once_with(
+            "/tmp/.taskpods/test-pod/../../.git", "/tmp/repo/.git"
+        )
+
+    @patch("taskpods.get_repo_root")
+    @patch("taskpods.sout")
+    @patch("os.path.samefile")
+    @patch("os.path.isfile")
+    def test_samefile_oserror(
+        self, mock_isfile, mock_samefile, mock_sout, mock_get_repo_root
+    ):
+        """An OSError from samefile (e.g. dangling gitdir) exits cleanly."""
+        mock_get_repo_root.return_value = "/tmp/repo"
+        mock_isfile.return_value = True
+        mock_sout.return_value = "/tmp/repo/.git"
+        mock_samefile.side_effect = OSError("No such file or directory")
+
+        with patch("sys.exit") as mock_exit:
+            with patch("builtins.print") as mock_print:
+                validate_worktree_link("/tmp/.taskpods/test-pod")
+                assert any(
+                    "Error validating worktree link" in str(c.args[0])
+                    for c in mock_print.call_args_list
+                )
+                mock_exit.assert_called_once_with(1)
+
+
+class TestValidatePodNameWarning:
+    """The 'branch already exists' warning is opt-in (start only)."""
+
+    @patch("taskpods.branch_exists")
+    def test_warns_by_default(self, mock_branch_exists):
+        """Default validation warns when the pod branch already exists."""
+        mock_branch_exists.return_value = True
+        with patch("builtins.print") as mock_print:
+            validate_pod_name("my-pod")
+            mock_print.assert_any_call(
+                "[!] Warning: Branch 'pods/my-pod' already exists"
+            )
+            mock_print.assert_any_call("    This pod will reuse the existing branch")
+
+    @patch("taskpods.branch_exists")
+    def test_suppressed_for_done_abort(self, mock_branch_exists):
+        """warn_existing_branch=False prints no warning (done/abort path)."""
+        mock_branch_exists.return_value = True
+        with patch("builtins.print") as mock_print:
+            validate_pod_name("my-pod", warn_existing_branch=False)
+            for c in mock_print.call_args_list:
+                assert "already exists" not in str(c)

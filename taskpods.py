@@ -219,32 +219,36 @@ def validate_worktree_link(worktree_path: str) -> None:
         print(f"[x] Error: {worktree_path} is not a valid linked worktree")
         sys.exit(1)
 
+    # The .git file in a linked worktree points at the worktree's private
+    # dir (<main>/.git/worktrees/<name>), not at the main .git dir itself, so
+    # compare the worktree's *common* git dir with the repository's .git.
     try:
-        with open(git_file, "r") as f:
-            git_content = f.read().strip()
-            if not git_content.startswith("gitdir: "):
-                print(f"[x] Error: {worktree_path} is not a valid linked worktree")
-                sys.exit(1)
-
-            # Extract the path to the main repository
-            main_git_dir = git_content[8:]  # Remove "gitdir: " prefix
-            if not os.path.isabs(main_git_dir):
-                # Relative path, resolve it
-                main_git_dir = os.path.join(worktree_path, main_git_dir)
-
-            if not os.path.samefile(main_git_dir, os.path.join(repo_root, ".git")):
+        common_dir = sout(["git", "-C", worktree_path, "rev-parse", "--git-common-dir"])
+    except subprocess.CalledProcessError:
+        print(f"[x] Error: {worktree_path} is not a valid linked worktree")
+        sys.exit(1)
+    else:
+        if not os.path.isabs(common_dir):
+            common_dir = os.path.join(worktree_path, common_dir)
+        try:
+            if not os.path.samefile(common_dir, os.path.join(repo_root, ".git")):
                 print(
                     f"[x] Error: {worktree_path} is not linked to the expected "
                     "repository"
                 )
                 sys.exit(1)
-    except IOError as e:
-        print(f"[x] Error reading worktree link: {e}")
-        sys.exit(1)
+        except OSError as e:
+            print(f"[x] Error validating worktree link: {e}")
+            sys.exit(1)
 
 
-def validate_pod_name(name: str) -> None:
-    """Validate that the pod name is valid."""
+def validate_pod_name(name: str, warn_existing_branch: bool = True) -> None:
+    """Validate that the pod name is valid.
+
+    warn_existing_branch controls the "branch already exists" warning,
+    which is only meaningful when creating a pod (start); done/abort
+    expect the branch to exist and pass False.
+    """
     if not name or not name.strip():
         print("[x] Error: Pod name cannot be empty")
         sys.exit(1)
@@ -262,10 +266,11 @@ def validate_pod_name(name: str) -> None:
         sys.exit(1)
 
     # Check if the branch name would conflict with existing branches
-    branch_name = f"pods/{name}"
-    if branch_exists(branch_name):
-        print(f"[!] Warning: Branch '{branch_name}' already exists")
-        print("    This pod will reuse the existing branch")
+    if warn_existing_branch:
+        branch_name = f"pods/{name}"
+        if branch_exists(branch_name):
+            print(f"[!] Warning: Branch '{branch_name}' already exists")
+            print("    This pod will reuse the existing branch")
 
 
 def branch_exists(branch: str) -> bool:
@@ -563,7 +568,7 @@ def list_pods(_args: argparse.Namespace) -> None:
 def done(args: argparse.Namespace) -> None:
     """Finish a pod: commit, push, open PR, optionally remove."""
     name = args.name
-    validate_pod_name(name)
+    validate_pod_name(name, warn_existing_branch=False)
     worktree_path = os.path.join(get_pods_dir(), name)
     if not os.path.isdir(worktree_path):
         print(f"[x] No such pod: {name}")
@@ -677,7 +682,7 @@ def done(args: argparse.Namespace) -> None:
 def abort(args: argparse.Namespace) -> None:
     """Abort a pod: delete worktree and branch if unpushed."""
     name = args.name
-    validate_pod_name(name)
+    validate_pod_name(name, warn_existing_branch=False)
     worktree_path = os.path.join(get_pods_dir(), name)
     if not os.path.isdir(worktree_path):
         print(f"[x] No such pod: {name}")

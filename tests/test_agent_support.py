@@ -244,3 +244,77 @@ class TestErrorBranches:
         mock_call.side_effect = KeyboardInterrupt()
         with patch("builtins.print"):
             assert run_agent(["claude"], "/tmp/x") == 130
+
+
+class TestWorktreeLinkValidation:
+    """Test validate_worktree_link against real git worktrees."""
+
+    def test_real_worktree_passes(self, tmp_path):
+        """Test a genuine linked worktree validates (regression: done/abort)."""
+        import subprocess as sp
+        import taskpods
+
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        sp.run(["git", "init", "-q"], cwd=repo, check=True)
+        sp.run(["git", "config", "user.email", "t@t"], cwd=repo, check=True)
+        sp.run(["git", "config", "user.name", "t"], cwd=repo, check=True)
+        (repo / "f.txt").write_text("x")
+        sp.run(["git", "add", "."], cwd=repo, check=True)
+        sp.run(["git", "commit", "-qm", "init"], cwd=repo, check=True)
+        wt = tmp_path / "pod"
+        sp.run(
+            ["git", "worktree", "add", "-q", "-b", "pods/x", str(wt)],
+            cwd=repo,
+            check=True,
+        )
+        with patch("taskpods.get_repo_root", return_value=str(repo)):
+            taskpods.validate_worktree_link(str(wt))  # must not exit
+
+    def test_foreign_worktree_rejected(self, tmp_path):
+        """Test a worktree of a different repository is rejected."""
+        import subprocess as sp
+        import taskpods
+
+        def make_repo(path):
+            path.mkdir()
+            sp.run(["git", "init", "-q"], cwd=path, check=True)
+            sp.run(["git", "config", "user.email", "t@t"], cwd=path, check=True)
+            sp.run(["git", "config", "user.name", "t"], cwd=path, check=True)
+            (path / "f.txt").write_text("x")
+            sp.run(["git", "add", "."], cwd=path, check=True)
+            sp.run(["git", "commit", "-qm", "init"], cwd=path, check=True)
+
+        repo_a = tmp_path / "a"
+        repo_b = tmp_path / "b"
+        make_repo(repo_a)
+        make_repo(repo_b)
+        wt = tmp_path / "wt-b"
+        sp.run(
+            ["git", "worktree", "add", "-q", "-b", "x", str(wt)],
+            cwd=repo_b,
+            check=True,
+        )
+        with patch("taskpods.get_repo_root", return_value=str(repo_a)):
+            with patch("builtins.print"):
+                try:
+                    taskpods.validate_worktree_link(str(wt))
+                    raise AssertionError("should have exited")
+                except SystemExit as e:
+                    assert e.code == 1
+
+    @patch("taskpods.sout")
+    @patch("taskpods.os.path.isfile")
+    def test_non_worktree_rejected(self, mock_isfile, mock_sout, tmp_path):
+        """Test a plain directory with a .git file is rejected by git itself."""
+        import subprocess as sp
+        import taskpods
+
+        mock_isfile.return_value = True
+        mock_sout.side_effect = sp.CalledProcessError(128, "git")
+        with patch("builtins.print"):
+            try:
+                taskpods.validate_worktree_link(str(tmp_path))
+                raise AssertionError("should have exited")
+            except SystemExit as e:
+                assert e.code == 1
