@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Configurable via the `TASKPODS_AGENT` env var or the `agent` key in
   `~/.taskpodsrc`.
 - Zed editor auto-detection.
+- CI now also tests on Python 3.13.
 
 ### Fixed
 
@@ -29,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Minimum Python version is now 3.9, matching the README (3.7/3.8 are EOL).
+- All development dependencies bumped to their latest releases (pytest 9.1,
+  pytest-cov 7.1, black 26.5, flake8 7.3, mypy 2.3, coverage 7.16, bandit
+  1.9, build 1.6, twine 7.0, and friends), and the pre-commit hooks updated
+  (pre-commit-hooks v6, black 26.5.1, flake8 7.3.0, mypy v2.3.1, isort 9.0.1).
+- Lint and release workflows now run on Python 3.13.
 
 ## [0.2.0] - 2025-08-24
 
