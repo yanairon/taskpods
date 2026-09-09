@@ -11,7 +11,9 @@ branch was never pushed.
 
 Commands:
 
-* `start <name>` – create a new pod worktree and branch from the base.
+* `start <name>` – create a new pod worktree and branch from the base,
+  optionally launching an AI coding agent (Claude Code, Codex CLI, Gemini CLI,
+  opencode, aider, ...) inside the pod via `--agent`.
 * `done <name>` – stage, commit, push the pod, optionally open a PR via `gh`.
 * `abort <name>` – remove an unpushed pod and its branch.
 * `list` – list all pods currently checked out.
@@ -32,10 +34,11 @@ See the README.md for more details.
 import argparse
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def get_repo_root() -> str:
@@ -82,10 +85,56 @@ def have(cmd_name: str) -> bool:
     return shutil.which(cmd_name) is not None
 
 
+def _load_config() -> Dict[str, Any]:
+    """Load the ~/.taskpodsrc JSON config, silently ignoring any errors."""
+    config_file = os.path.expanduser("~/.taskpodsrc")
+    if os.path.exists(config_file):
+        try:
+            with open(config_file) as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return data
+        except (json.JSONDecodeError, IOError):
+            pass  # Silently ignore config file errors
+    return {}
+
+
 def ensure_pods_dir() -> None:
     """Create the pods directory if it does not exist."""
     pods_dir = get_pods_dir()
     os.makedirs(pods_dir, exist_ok=True)
+
+
+def ensure_pods_excluded() -> None:
+    """Add .taskpods/ to .git/info/exclude so pods never dirty git status.
+
+    Without this, an active pod shows up as an untracked directory in the
+    main worktree, which also blocks `taskpods start` for the next pod
+    (the uncommitted-changes safety check trips on the pods dir itself).
+    Uses .git/info/exclude instead of .gitignore so the repository's own
+    tracked files are left untouched. Non-critical: failures are ignored.
+    """
+    repo_root = get_repo_root()
+    git_dir = os.path.join(repo_root, ".git")
+    if not os.path.isdir(git_dir):
+        # Inside a linked worktree .git is a file; nothing to do there.
+        return
+    exclude_file = os.path.join(git_dir, "info", "exclude")
+    entry = ".taskpods/"
+    try:
+        existing = ""
+        if os.path.exists(exclude_file):
+            with open(exclude_file) as f:
+                existing = f.read()
+        if entry in existing.splitlines():
+            return
+        os.makedirs(os.path.dirname(exclude_file), exist_ok=True)
+        with open(exclude_file, "a") as f:
+            if existing and not existing.endswith("\n"):
+                f.write("\n")
+            f.write(entry + "\n")
+    except OSError:
+        pass  # Non-critical: exclusion is a convenience, not a requirement
 
 
 def validate_base_branch(base: str) -> None:
@@ -285,7 +334,7 @@ def open_editor(path: str) -> None:
             "    Configure editor in ~/.taskpodsrc or set TASKPODS_EDITOR "
             "environment variable"
         )
-        print("    Supported editors: cursor, code, vim, nvim, emacs, subl, atom")
+        print("    Supported editors: cursor, code, zed, vim, nvim, emacs, subl, atom")
 
 
 def _get_preferred_editor() -> Optional[str]:
@@ -297,20 +346,13 @@ def _get_preferred_editor() -> Optional[str]:
         return editor
 
     # 3. Configuration file
-    config_file = os.path.expanduser("~/.taskpodsrc")
-    if os.path.exists(config_file):
-        try:
-            with open(config_file) as f:
-                config = json.load(f)
-                editor = config.get("editor")
-                if editor and isinstance(editor, str):
-                    return editor  # type: ignore[no-any-return]
-        except (json.JSONDecodeError, IOError):
-            pass  # Silently ignore config file errors
+    editor = _load_config().get("editor")
+    if editor and isinstance(editor, str):
+        return editor
 
     # 4. Intelligent defaults (lowest priority)
     # Try modern editors first, then terminal editors
-    modern_editors = ["cursor", "code", "subl", "atom"]
+    modern_editors = ["cursor", "code", "zed", "subl", "atom"]
     terminal_editors = ["vim", "nvim", "emacs"]
 
     for editor in modern_editors + terminal_editors:
@@ -321,10 +363,66 @@ def _get_preferred_editor() -> Optional[str]:
     return None
 
 
+def _get_default_base() -> str:
+    """Get the default base branch from the config file, or 'main'."""
+    base = _load_config().get("default_base")
+    if base and isinstance(base, str):
+        return base
+    return "main"
+
+
+def _get_preferred_agent() -> Optional[List[str]]:
+    """Get the configured agent command: env var first, then config file.
+
+    TASKPODS_AGENT and the "agent" key in ~/.taskpodsrc both accept a
+    shell-style command line, e.g. 'claude -p' or 'codex exec'.
+    """
+    agent_env = os.environ.get("TASKPODS_AGENT")
+    if agent_env and agent_env.strip():
+        return shlex.split(agent_env)
+    agent_cfg = _load_config().get("agent")
+    if isinstance(agent_cfg, str) and agent_cfg.strip():
+        return shlex.split(agent_cfg)
+    if isinstance(agent_cfg, list) and all(isinstance(p, str) for p in agent_cfg):
+        return list(agent_cfg)
+    return None
+
+
+def _resolve_agent(args: argparse.Namespace) -> Optional[List[str]]:
+    """Resolve the agent command for start: CLI flag, then env/config."""
+    cli_agent = getattr(args, "agent", None)
+    if cli_agent:
+        return list(cli_agent)
+    if cli_agent is None:
+        return _get_preferred_agent()
+    # `--agent` passed with no command following it.
+    print("[!] Warning: --agent given without a command; ignoring it")
+    return None
+
+
+def run_agent(cmd: List[str], cwd: str) -> int:
+    """Run an agent command inside a pod, returning its exit code.
+
+    The agent runs in the foreground with inherited stdio, so interactive
+    and headless agents both behave exactly as if launched by hand.
+    """
+    print(f"[*] Running agent in {cwd}: {' '.join(cmd)}")
+    try:
+        return subprocess.call(cmd, cwd=cwd)
+    except FileNotFoundError:
+        print(f"[x] Error: Agent command not found: {cmd[0]}")
+        print("    Install it or check that it is on your PATH")
+        return 127
+    except KeyboardInterrupt:
+        print("[!] Agent interrupted; pod kept")
+        return 130
+
+
 def start(args: argparse.Namespace) -> None:
     """Create a new pod worktree and branch."""
     ensure_pods_dir()
-    base = args.base
+    ensure_pods_excluded()
+    base = args.base or _get_default_base()
     name = args.name
 
     # Validate inputs
@@ -400,6 +498,18 @@ def start(args: argparse.Namespace) -> None:
         # Continue anyway, this is not critical
 
     print(f"[✓] Pod ready: {worktree_path}  (branch: {branch})")
+
+    # Handle agent launch: everything after --agent runs inside the pod.
+    agent_cmd = _resolve_agent(args)
+    if agent_cmd:
+        code = run_agent(agent_cmd, worktree_path)
+        if code == 0:
+            print(f"[✓] Agent finished; pod kept at {worktree_path}")
+            print(f"    Review with: git -C {worktree_path} diff {base}")
+        else:
+            print(f"[!] Agent exited with status {code}; pod kept at {worktree_path}")
+        if not args.editor:
+            sys.exit(code)
 
     # Handle editor selection with command line priority
     if args.editor:
@@ -719,10 +829,20 @@ def main() -> None:
     s = sub.add_parser("start", help="create a new pod")
     s.add_argument("name")
     s.add_argument(
-        "--base", default="main", help="base branch to fork from (default: main)"
+        "--base",
+        default=None,
+        help="base branch to fork from (default: 'default_base' from "
+        "~/.taskpodsrc, or main)",
     )
     s.add_argument(
         "--editor", help="specify editor to open (overrides config and environment)"
+    )
+    s.add_argument(
+        "--agent",
+        nargs=argparse.REMAINDER,
+        help="run an AI agent command inside the new pod, e.g. "
+        '--agent claude -p "fix the typos" (overrides TASKPODS_AGENT '
+        "and the 'agent' key in ~/.taskpodsrc)",
     )
     s.set_defaults(func=start)
 

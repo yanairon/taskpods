@@ -12,18 +12,23 @@
 ---
 
 `taskpods` is a lightweight CLI that lets you spin up disposable **AI pods** inside your Git repo.  
-Each pod is an isolated Git worktree/branch — perfect for experimenting with Copilot, Cursor, or Claude Code without polluting `main`.  
+Each pod is an isolated Git worktree/branch — perfect for running AI coding agents in parallel without polluting `main`.  
 When done, you can merge, PR, or nuke the pod entirely.
+
+Works with any agent or editor: **Claude Code, Codex CLI, Gemini CLI, opencode, aider**, Cursor, VS Code, Zed, Vim, and anything else on your PATH.
 
 ---
 
 ## ✨ Features
 
 - **Instant sandbox:** `taskpods start <name>` → creates `.taskpods/<name>` and `pods/<name>` from `main`.  
+- **Agent launcher:** `taskpods start <name> --agent claude -p "fix the typos"` → runs any coding agent inside the new pod.  
+- **Parallel-safe:** the pods directory is auto-excluded from `git status`, so you can run many pods at once.  
 - **Clean exit:** `taskpods done <name>` → commit, push, open a PR (via [`gh` CLI]), then remove the worktree.  
 - **Abort button:** `taskpods abort <name>` → deletes an unpushed pod safely.  
 - **Status overview:** `taskpods list` → see all active pods and paths.  
 - **Housekeeping:** `taskpods prune` → removes pods already merged upstream.  
+- **Zero config:** no TUI, no daemon, no session manager — one Python file over plain `git worktree`.
 
 ---
 
@@ -67,6 +72,44 @@ sudo mv taskpods.py /usr/local/bin/taskpods
 taskpods start fix-typos
 ```
 
+### Run an AI agent inside the pod
+
+Everything after `--agent` runs as-is inside the pod's worktree, so any agent CLI works:
+
+```bash
+# Claude Code (headless)
+taskpods start fix-typos --agent claude -p "fix the typos" --permission-mode acceptEdits
+
+# Codex CLI (non-interactive)
+taskpods start fix-typos --agent codex exec --sandbox workspace-write "fix the typos"
+
+# Gemini CLI (headless)
+taskpods start fix-typos --agent gemini -p "fix the typos"
+
+# opencode
+taskpods start fix-typos --agent opencode run "fix the typos"
+
+# aider
+taskpods start fix-typos --agent aider --message "fix the typos"
+```
+
+The agent runs in the foreground with your terminal attached, exactly as if you had `cd`'d into the pod yourself. Interactive agents work too (`--agent claude`). When `--agent` is used, no editor is opened unless you also pass `--editor`.
+
+Flags after `--agent` belong to the agent; put taskpods' own flags (`--base`, `--editor`) before it.
+
+Set a default agent and plain `taskpods start <name>` launches it every time:
+
+```bash
+export TASKPODS_AGENT="claude -p"
+```
+
+When the agent exits, the pod stays put. Review the diff, then finish:
+
+```bash
+git -C .taskpods/fix-typos diff main
+taskpods done fix-typos -m "Fix docs typos" --remove
+```
+
 ### Finish & PR
 
 ```bash
@@ -93,14 +136,26 @@ taskpods prune
 
 ---
 
-## ⚙️ Editor Configuration
+## 🤖 Where taskpods fits
 
-- Env var:
+Some agent CLIs grew their own worktree support — Claude Code has `-w/--worktree`, and tools like vibe-kanban or claude-squad wrap agents in TUIs and session daemons. `taskpods` stays the small unix-y lane:
+
+- **Agent-agnostic:** one tool for Claude, Codex, Gemini, opencode, aider, or whatever ships next month — no per-agent plugin.  
+- **Zero config, no daemon:** a single Python file over `git worktree`. Nothing runs in the background.  
+- **Composable:** plain stdout and exit codes, so it drops into scripts, CI, and your own aliases.  
+- **Full lifecycle:** `start` → agent runs → `done` commits, pushes and opens the PR → `prune` cleans up.
+
+---
+
+## ⚙️ Configuration
+
+- Env vars:
 
 ```bash
 export TASKPODS_EDITOR="vim"
 export TASKPODS_EDITOR="code"
 export TASKPODS_EDITOR="cursor"
+export TASKPODS_AGENT="claude -p"
 ```
 
 - Config file `~/.taskpodsrc`:
@@ -108,17 +163,18 @@ export TASKPODS_EDITOR="cursor"
 ```json
 {
   "editor": "vim",
-  "default_base": "main"
+  "default_base": "main",
+  "agent": "claude -p"
 }
 ```
 
-- CLI flag:
+- CLI flags (highest priority):
 
 ```bash
-taskpods start my-feature --editor vim
+taskpods start my-feature --editor vim --base develop --agent claude -p "..."
 ```
 
-Supported editors: Cursor, VS Code, Sublime, Atom, Vim/Neovim, Emacs, or any in your PATH.
+Supported editors: Cursor, VS Code, Zed, Sublime, Atom, Vim/Neovim, Emacs, or any in your PATH.
 
 ---
 
@@ -142,7 +198,7 @@ MIT – see [LICENSE](LICENSE).
 ## 🤔 Why worktrees?
 
 Git worktrees let you check out multiple branches in separate dirs without cloning. They’re fast, disk-light, and easy to clean up.  
-`taskpods` wraps the common `git worktree` operations with sensible defaults and quality-of-life features like PR creation and safe aborts.
+`taskpods` wraps the common `git worktree` operations with sensible defaults and quality-of-life features like agent launching, PR creation and safe aborts.
 
 ---
 
