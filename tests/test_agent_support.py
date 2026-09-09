@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 # Add repository root to sys.path to ensure taskpods.py can be imported
 repo_root = __import__("os").path.dirname(__import__("os").path.dirname(__file__))
@@ -203,3 +203,44 @@ class TestStartWithAgent:
         )
         mock_open_editor.assert_not_called()
         mock_validate_base.assert_called_once_with("main")
+
+
+class TestErrorBranches:
+    """Cover defensive error branches in the new helpers."""
+
+    @patch("taskpods.os.path.exists")
+    @patch("taskpods.os.path.expanduser")
+    def test_load_config_bad_json_returns_empty(self, mock_expanduser, mock_exists):
+        """Test a malformed ~/.taskpodsrc is ignored."""
+        import taskpods
+
+        mock_expanduser.return_value = "/fake/.taskpodsrc"
+        mock_exists.return_value = True
+        with patch("builtins.open", mock_open(read_data="{not json")):
+            assert taskpods._load_config() == {}
+
+    @patch("taskpods.get_repo_root")
+    def test_exclude_handles_missing_trailing_newline(self, mock_root, tmp_path):
+        """Test an exclude file without a trailing newline still gets a clean entry."""
+        (tmp_path / ".git" / "info").mkdir(parents=True)
+        exclude = tmp_path / ".git" / "info" / "exclude"
+        exclude.write_text("# no trailing newline")
+        mock_root.return_value = str(tmp_path)
+        ensure_pods_excluded()
+        assert exclude.read_text().splitlines()[-1] == ".taskpods/"
+
+    @patch("taskpods.get_repo_root")
+    @patch("taskpods.os.makedirs")
+    def test_exclude_oserror_is_silent(self, mock_makedirs, mock_root, tmp_path):
+        """Test an OSError while writing the exclude file is ignored."""
+        (tmp_path / ".git").mkdir()
+        mock_root.return_value = str(tmp_path)
+        mock_makedirs.side_effect = OSError("disk full")
+        ensure_pods_excluded()  # must not raise
+
+    @patch("taskpods.subprocess.call")
+    def test_agent_keyboard_interrupt_returns_130(self, mock_call):
+        """Test Ctrl-C during an agent run maps to exit code 130."""
+        mock_call.side_effect = KeyboardInterrupt()
+        with patch("builtins.print"):
+            assert run_agent(["claude"], "/tmp/x") == 130
