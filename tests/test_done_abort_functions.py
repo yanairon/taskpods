@@ -57,7 +57,7 @@ class TestDoneFunction:
         with patch("builtins.print") as mock_print:
             done(args)
 
-            mock_validate_name.assert_called_once_with("test-pod")
+            mock_validate_name.assert_called_once_with("test-pod", warn_existing_branch=False)
             mock_validate_link.assert_called_once()
             mock_sh.assert_called()
             mock_print.assert_any_call("[*] Staging and committing in pods/test-pod…")
@@ -221,7 +221,7 @@ class TestAbortFunction:
         with patch("builtins.print") as mock_print:
             abort(args)
 
-            mock_validate_name.assert_called_once_with("test-pod")
+            mock_validate_name.assert_called_once_with("test-pod", warn_existing_branch=False)
             mock_validate_link.assert_called_once()
             mock_sh.assert_called()
             mock_print.assert_any_call("[✓] Aborted.")

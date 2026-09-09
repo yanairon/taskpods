@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.0] - 2026-09-10
+## [Unreleased]
 
 ### Added
 
@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   check and made `taskpods start` refuse to create a second pod.
 - The `default_base` key in `~/.taskpodsrc` is now honored when `--base` is
   not passed (it was documented but ignored).
+- `taskpods done` and `taskpods abort` no longer reject their own pods:
+  worktree link validation compared the worktree's private gitdir
+  (`.git/worktrees/<name>`) against the main `.git` dir, which never matched,
+  so both commands always errored out. It now compares the worktree's common
+  git dir (`git rev-parse --git-common-dir`). The misleading "branch already
+  exists" warning no longer prints during `done`/`abort`.
 
 ### Changed
 
@@ -89,7 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Path validation to prevent directory traversal
 - Git repository isolation improvements
 
-## [0.4.0] - 2026-09-10
+## [Unreleased]
 
 ### Added
 
