@@ -4,6 +4,5 @@
 {
   "editor": "vim",
   "default_base": "main",
-  "auto_open_editor": true,
-  "preferred_editors": ["vim", "code", "cursor"]
+  "agent": "claude -p"
 }
