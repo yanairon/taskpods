@@ -17,6 +17,8 @@ When done, you can merge, PR, or nuke the pod entirely.
 
 Works with any agent or editor: **Claude Code, Codex CLI, Gemini CLI, opencode, aider**, Cursor, VS Code, Zed, Vim, and anything else on your PATH.
 
+![taskpods terminal demo](docs/assets/taskpods-demo.gif)
+
 ---
 
 ## ✨ Features
