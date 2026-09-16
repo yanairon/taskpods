@@ -229,3 +229,9 @@ Tools used: **Black**, **Flake8**, **MyPy**, **Pre-commit**.
 
 Contributions, bug reports, and feature requests are welcome!  
 Open an issue or submit a PR.
+
+---
+
+## Related projects
+
+- [claude-hookbook](https://github.com/yanairon/claude-hookbook) - Production-ready Claude Code hooks you can understand, combine, and export. Pairs well with taskpods: give every pod's agent session the same reviewed hooks setup.
